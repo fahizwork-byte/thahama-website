@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -152,8 +153,13 @@ export default function About() {
             </p>
           </div>
 
-          <div className="relative">
-            <div className="aspect-square rounded-2xl bg-linear-to-br from-primary to-accent/30 shadow-2xl" />
+          <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
+            <Image
+              src="/images/about_image.png"
+              alt="About Thahama Market"
+              fill
+              className="object-cover rounded-2xl"
+            />
           </div>
         </div>
 
