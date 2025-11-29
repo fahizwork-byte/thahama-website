@@ -119,7 +119,7 @@ export default function About() {
     <section
       id="about"
       ref={sectionRef}
-      className="pt-32 md:pt-40 pb-20 md:pb-32 bg-light relative overflow-hidden -mt-20 md:-mt-32 rounded-t-3xl z-10"
+      className="pt-16 md:pt-20 pb-12 md:pb-16 bg-light relative overflow-hidden -mt-15 md:-mt-20 rounded-t-3xl z-10"
     >
       {/* Background Decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
@@ -127,12 +127,12 @@ export default function About() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <h2
           ref={titleRef}
-          className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-primary mb-16"
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-primary mb-8"
         >
           About <span className="text-accent">Thahama Market</span>
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center mb-12">
           <div ref={contentRef}>
             <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6">
               Who We Are
