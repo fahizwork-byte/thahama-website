@@ -2,17 +2,16 @@ import type { NextConfig } from "next";
 
 /**
  * Next.js Configuration
- * 
+ *
  * Optimized for performance with:
  * - Image optimization settings
  * - Compression
  * - Production optimizations
  */
 const nextConfig: NextConfig = {
-  // Turbopack configuration for faster builds
-  turbopack: {
-    root: process.cwd(),
-  },
+  // Note: Turbopack is for development only
+  // Vercel uses standard Next.js build in production
+  // This config won't affect production builds
 
   // Image optimization - supports multiple formats and sizes
   images: {
@@ -34,13 +33,12 @@ const nextConfig: NextConfig = {
 
   // Performance optimizations
   reactStrictMode: true,
-  
-  // Compression
+
+  // Compression (enabled by default on Vercel)
   compress: true,
-  
-  // Production optimizations
-  swcMinify: true,
-  
+
+  // Note: swcMinify is enabled by default in Next.js 16, no need to specify
+
   // Experimental features for better performance
   experimental: {
     optimizePackageImports: ["gsap", "react-icons"],
