@@ -1,9 +1,31 @@
+/**
+ * Navbar Component - Client Component
+ * 
+ * Sticky navigation bar with smart show/hide behavior based on scroll direction.
+ * 
+ * Features:
+ * - Slides down from top on initial page load
+ * - Hides when scrolling down, shows when scrolling up
+ * - Transparent in hero section, blur background when scrolled
+ * - Mobile menu with GSAP slide animation
+ * - Smooth scroll to sections
+ * 
+ * Performance optimizations:
+ * - Uses refs to avoid unnecessary re-renders
+ * - Passive scroll listeners for better performance
+ * - GSAP animations with proper cleanup
+ * 
+ * @component
+ * @returns {JSX.Element} Navigation bar with logo, links, and mobile menu
+ */
 "use client";
 
 import { useEffect, useState, useRef } from "react";
 import { gsap } from "gsap";
 import { FiMenu, FiX } from "react-icons/fi";
 
+// Navigation links configuration
+// Static data - could be moved to a config file if needed
 const navLinks = [
   { name: "Home", href: "#home" },
   { name: "About", href: "#about" },
@@ -13,19 +35,24 @@ const navLinks = [
   { name: "Contact", href: "#contact" },
 ];
 
-
-
-
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
-  const [isAtTop, setIsAtTop] = useState(true);
-  const navRef = useRef<HTMLElement>(null);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const lastScrollY = useRef(0);
-  const hasAnimated = useRef(false);
+  // State management
+  const [isOpen, setIsOpen] = useState(false); // Mobile menu open/close state
+  const [isVisible, setIsVisible] = useState(true); // Navbar visibility (hide/show on scroll)
+  const [isAtTop, setIsAtTop] = useState(true); // Whether user is in hero section
 
-  // Entrance animation - navbar slides down from top on first load
+  // Refs for DOM elements and animation tracking
+  const navRef = useRef<HTMLElement>(null); // Main navbar element
+  const mobileMenuRef = useRef<HTMLDivElement>(null); // Mobile menu drawer
+  const lastScrollY = useRef(0); // Track last scroll position for direction detection
+  const hasAnimated = useRef(false); // Track if entrance animation has played
+
+  /**
+   * Entrance Animation Effect
+   * 
+   * Animates navbar sliding down from top on initial page load.
+   * Only runs once using hasAnimated ref to prevent re-animation on re-renders.
+   */
   useEffect(() => {
     if (navRef.current && !hasAnimated.current && typeof window !== "undefined") {
       // Small delay to ensure component is fully mounted
@@ -66,6 +93,16 @@ export default function Navbar() {
     }
   }, []);
 
+  /**
+   * Scroll Behavior Effect
+   * 
+   * Handles navbar visibility based on scroll direction and position:
+   * - Always visible in hero section (transparent)
+   * - Shows when scrolling up (with blur background)
+   * - Hides when scrolling down (outside hero section)
+   * 
+   * Performance: Uses passive scroll listener and refs to minimize re-renders
+   */
   useEffect(() => {
     // Initialize lastScrollY with current scroll position
     lastScrollY.current = window.scrollY;
@@ -100,6 +137,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  /**
+   * Mobile Menu Animation Effect
+   * 
+   * Animates mobile menu slide-in/out using GSAP.
+   * Menu slides from right (100% translateX) to visible (0).
+   */
   useEffect(() => {
     if (mobileMenuRef.current) {
       if (isOpen) {
@@ -118,6 +161,14 @@ export default function Navbar() {
     }
   }, [isOpen]);
 
+  /**
+   * Smooth Scroll to Section
+   * 
+   * Scrolls to a section when navigation link is clicked.
+   * Closes mobile menu after navigation.
+   * 
+   * @param {string} href - Section ID to scroll to (e.g., "#about")
+   */
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {

@@ -1,8 +1,16 @@
-"use client";
-
+/**
+ * Footer Component - Server Component
+ * 
+ * Static footer content that doesn't require client-side interactivity.
+ * Converted to server component for better performance and SEO.
+ * 
+ * @component
+ * @returns {JSX.Element} Footer with company info, links, and social media
+ */
 import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiTwitter } from "react-icons/fi";
 
 export default function Footer() {
+  // Get current year for copyright (server-side rendered)
   const currentYear = new Date().getFullYear();
 
   return (
