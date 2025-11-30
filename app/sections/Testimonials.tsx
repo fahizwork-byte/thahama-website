@@ -92,7 +92,7 @@ export default function Testimonials() {
         carousel.innerHTML += clone;
 
         // Infinite scroll animation
-        gsap.to(carousel, {
+        const carouselAnimation = gsap.to(carousel, {
           x: -(totalWidth),
           duration: 40,
           ease: "none",
@@ -104,11 +104,11 @@ export default function Testimonials() {
 
         // Pause on hover
         carousel.addEventListener("mouseenter", () => {
-          gsap.to(carousel, { timeScale: 0, duration: 0.3 });
+          carouselAnimation.timeScale(0);
         });
 
         carousel.addEventListener("mouseleave", () => {
-          gsap.to(carousel, { timeScale: 1, duration: 0.3 });
+          carouselAnimation.timeScale(1);
         });
       }
     }, sectionRef);

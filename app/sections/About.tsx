@@ -22,74 +22,90 @@ export default function About() {
   const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Parallax zoom effect on about image
-      // Zoom in when scrolling up, zoom out when scrolling down
-      if (imageRef.current && sectionRef.current) {
-        // Set initial scale (zoomed in)
-        gsap.set(imageRef.current, { scale: 1.25 });
+    let cleanup: (() => void) | null = null;
+    let timeoutId: NodeJS.Timeout | null = null;
+    let scrollCleanup: (() => void) | null = null;
 
-        const handleScroll = () => {
-          const scrollY = window.scrollY;
-          const sectionTop = sectionRef.current?.offsetTop || 0;
-          const sectionHeight = sectionRef.current?.offsetHeight || 0;
-          const windowHeight = window.innerHeight;
-          
-          // Calculate when section enters viewport
-          const sectionStart = sectionTop - windowHeight;
-          const sectionEnd = sectionTop + sectionHeight;
-          
-          // Calculate scroll progress relative to section
-          // When section is at top of viewport: progress = 0 (zoomed in)
-          // When section is scrolled past: progress = 1 (normal size)
-          let scrollProgress = 0;
-          
-          if (scrollY > sectionStart && scrollY < sectionEnd) {
-            // Section is in viewport
-            scrollProgress = (scrollY - sectionStart) / (sectionEnd - sectionStart);
-          } else if (scrollY >= sectionEnd) {
-            // Section is scrolled past
-            scrollProgress = 1;
-          }
-          
-          // Zoom out as you scroll down through the section
-          // At top: scale = 1.25 (zoomed in)
-          // At bottom: scale = 1.0 (normal size)
-          const scale = 1.25 - scrollProgress * 0.25;
-          
-          // Clamp scale between 1.0 and 1.25
-          const clampedScale = Math.max(1.0, Math.min(1.25, scale));
-          
-          gsap.to(imageRef.current, {
-            scale: clampedScale,
-            duration: 0.2,
-            ease: "none",
-          });
-        };
-
-        // Use requestAnimationFrame for smooth performance
-        let ticking = false;
-        const scrollHandler = () => {
-          if (!ticking) {
-            window.requestAnimationFrame(() => {
-              handleScroll();
-              ticking = false;
-            });
-            ticking = true;
-          }
-        };
-
-        window.addEventListener("scroll", scrollHandler, { passive: true });
-        
-        // Initial call to set correct scale
-        handleScroll();
-
-        return () => {
-          window.removeEventListener("scroll", scrollHandler);
-        };
+    // Wait a bit for refs to be ready
+    const initAnimations = () => {
+      if (!sectionRef.current) {
+        timeoutId = setTimeout(initAnimations, 100);
+        return;
       }
-      // Title animation
-      if (titleRef.current) {
+
+      const ctx = gsap.context(() => {
+        // Parallax zoom effect on about image
+        // Zoom in when scrolling up, zoom out when scrolling down
+        if (imageRef.current && sectionRef.current && typeof window !== "undefined") {
+          // Set initial scale (zoomed in)
+          gsap.set(imageRef.current, { scale: 1.25 });
+
+          const handleScroll = () => {
+            if (typeof window === "undefined") return;
+
+            const scrollY = window.scrollY;
+            const sectionTop = sectionRef.current?.offsetTop || 0;
+            const sectionHeight = sectionRef.current?.offsetHeight || 0;
+            const windowHeight = window.innerHeight;
+
+            // Calculate when section enters viewport
+            const sectionStart = sectionTop - windowHeight;
+            const sectionEnd = sectionTop + sectionHeight;
+
+            // Calculate scroll progress relative to section
+            // When section is at top of viewport: progress = 0 (zoomed in)
+            // When section is scrolled past: progress = 1 (normal size)
+            let scrollProgress = 0;
+
+            if (scrollY > sectionStart && scrollY < sectionEnd) {
+              // Section is in viewport
+              scrollProgress = (scrollY - sectionStart) / (sectionEnd - sectionStart);
+            } else if (scrollY >= sectionEnd) {
+              // Section is scrolled past
+              scrollProgress = 1;
+            }
+
+            // Zoom out as you scroll down through the section
+            // At top: scale = 1.25 (zoomed in)
+            // At bottom: scale = 1.0 (normal size)
+            const scale = 1.25 - scrollProgress * 0.25;
+
+            // Clamp scale between 1.0 and 1.25
+            const clampedScale = Math.max(1.0, Math.min(1.25, scale));
+
+            gsap.to(imageRef.current, {
+              scale: clampedScale,
+              duration: 0.2,
+              ease: "none",
+            });
+          };
+
+          // Use requestAnimationFrame for smooth performance
+          let ticking = false;
+          const scrollHandler = () => {
+            if (!ticking) {
+              window.requestAnimationFrame(() => {
+                handleScroll();
+                ticking = false;
+              });
+              ticking = true;
+            }
+          };
+
+          window.addEventListener("scroll", scrollHandler, { passive: true });
+
+          // Initial call to set correct scale
+          handleScroll();
+
+          // Store cleanup function for scroll handler
+          scrollCleanup = () => {
+            if (typeof window !== "undefined") {
+              window.removeEventListener("scroll", scrollHandler);
+            }
+          };
+        }
+        // Title animation
+        if (titleRef.current) {
         gsap.fromTo(
           titleRef.current,
           {
@@ -111,8 +127,8 @@ export default function About() {
         );
       }
 
-      // Content animation
-      if (contentRef.current) {
+        // Content animation
+        if (contentRef.current) {
         gsap.fromTo(
           contentRef.current,
           {
@@ -134,52 +150,102 @@ export default function About() {
         );
       }
 
-      // Stats animation with counter
-      if (statsRef.current) {
-        const statElements = statsRef.current.querySelectorAll(".stat-number");
+        // Stats animation with counter
+        if (statsRef.current && typeof window !== "undefined") {
+          const statElements = Array.from(statsRef.current.querySelectorAll(".stat-number"));
 
-        statElements.forEach((element, index) => {
-          const target = stats[index].number;
-          const obj = { value: 0 };
+          if (statElements.length > 0) {
+          // Create a single ScrollTrigger that handles all counters
+          ScrollTrigger.create({
+            trigger: statsRef.current,
+            start: "top 75%",
+            once: true,
+            onEnter: () => {
+              statElements.forEach((element, index) => {
+                if (!element || index >= stats.length) return;
+                if (!(element instanceof HTMLElement)) return;
 
-          gsap.to(obj, {
-            value: target,
-            duration: 2,
-            ease: "power2.out",
-            onUpdate: () => {
-              element.textContent = Math.round(obj.value).toLocaleString();
-            },
-            scrollTrigger: {
-              trigger: statsRef.current,
-              start: "top 75%",
-              toggleActions: "play none none none",
+                const target = stats[index].number;
+                const obj = { value: 0 };
+
+                // Ensure initial value is 0
+                element.textContent = "0";
+
+                // Animate the counter
+                gsap.to(obj, {
+                  value: target,
+                  duration: 2,
+                  ease: "power2.out",
+                  onUpdate: () => {
+                    const currentValue = Math.round(obj.value);
+                    element.textContent = currentValue.toLocaleString();
+                  },
+                });
+              });
             },
           });
-        });
 
-        gsap.fromTo(
-          statsRef.current.children,
-          {
-            opacity: 0,
-            y: 30,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 0.8,
-            stagger: 0.15,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: statsRef.current,
-              start: "top 75%",
-              toggleActions: "play none none none",
+          // Fade-in animation for stats cards
+          gsap.fromTo(
+            statsRef.current.children,
+            {
+              opacity: 0,
+              y: 30,
             },
-          }
-        );
-      }
-    }, sectionRef);
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              stagger: 0.15,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: statsRef.current,
+                start: "top 75%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
 
-    return () => ctx.revert();
+          // Fade-in animation for stats cards
+          gsap.fromTo(
+            statsRef.current.children,
+            {
+              opacity: 0,
+              y: 30,
+            },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.8,
+              stagger: 0.15,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: statsRef.current,
+                start: "top 75%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
+
+          // Refresh ScrollTrigger to ensure it works
+          ScrollTrigger.refresh();
+        }
+      }
+      }, sectionRef);
+
+      cleanup = () => {
+        if (scrollCleanup) scrollCleanup();
+        ctx.revert();
+      };
+    };
+
+    // Start initialization
+    initAnimations();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (cleanup) cleanup();
+    };
   }, []);
 
   return (
@@ -215,7 +281,7 @@ export default function About() {
             </p>
             <p className="text-gray-600 text-lg leading-relaxed">
               With multiple branches strategically located throughout Jeddah and expanding to the UAE,
-              we're bringing premium shopping experiences closer to you.
+              we&apos;re bringing premium shopping experiences closer to you.
             </p>
           </div>
 

@@ -14,6 +14,8 @@ export const metadata: Metadata = {
   keywords: ["supermarket", "grocery", "fresh produce", "Saudi Arabia", "UAE", "Jeddah", "Thahama"],
 };
 
+
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -21,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
+      <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>

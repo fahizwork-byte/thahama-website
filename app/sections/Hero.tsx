@@ -16,33 +16,40 @@ export default function Hero() {
   const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let scrollCleanup: (() => void) | null = null;
+
     const ctx = gsap.context(() => {
       // Parallax zoom effect on background image
       // Zoom in when scrolling up, zoom out when scrolling down
-      if (imageRef.current) {
-        // Set initial scale (zoomed in at top)
-        gsap.set(imageRef.current, { scale: 1.25 });
-
-        const handleScroll = () => {
-          const scrollY = window.scrollY;
-
-          // Calculate scale based on scroll position
-          // Max scroll distance for effect (800px for smooth transition)
+      if (imageRef.current && typeof window !== "undefined") {
+        // Calculate scale based on scroll position
+        const calculateScale = (scrollY: number) => {
           const maxScroll = 800;
           const scrollProgress = Math.min(scrollY / maxScroll, 1);
-
-          // Zoom out as you scroll down, zoom in as you scroll up
-          // At top (scrollY = 0): scale = 1.25 (zoomed in)
-          // After scrolling 800px: scale = 1.0 (normal size)
           const scale = 1.25 - scrollProgress * 0.25;
+          return Math.max(1.0, Math.min(1.25, scale));
+        };
 
-          // Clamp scale between 1.0 and 1.25
-          const clampedScale = Math.max(1.0, Math.min(1.25, scale));
+        // Get initial scroll position and set scale
+        const initialScrollY = window.scrollY;
+        const initialScale = calculateScale(initialScrollY);
+
+        // Only update if not already at the correct scale (prevents unnecessary animation on mount)
+        if (initialScrollY > 0) {
+          gsap.set(imageRef.current, { scale: initialScale });
+        }
+
+        const handleScroll = () => {
+          if (typeof window === "undefined") return;
+
+          const scrollY = window.scrollY;
+          const clampedScale = calculateScale(scrollY);
 
           gsap.to(imageRef.current, {
             scale: clampedScale,
             duration: 0.2,
             ease: "none",
+            overwrite: true,
           });
         };
 
@@ -60,41 +67,38 @@ export default function Hero() {
 
         window.addEventListener("scroll", scrollHandler, { passive: true });
 
-        // Initial call to set correct scale
-        handleScroll();
+        // Only call handleScroll if we're not at the top (to avoid unnecessary animation)
+        if (initialScrollY > 0) {
+          handleScroll();
+        }
 
-        return () => {
-          window.removeEventListener("scroll", scrollHandler);
+        // Store cleanup function
+        scrollCleanup = () => {
+          if (typeof window !== "undefined") {
+            window.removeEventListener("scroll", scrollHandler);
+          }
         };
       }
-      // Title animation with stagger
-      if (titleRef.current) {
-        const titleChars = titleRef.current.textContent?.split("") || [];
-        titleRef.current.innerHTML = titleChars
-          .map((char) => `<span class="inline-block">${char === " " ? "&nbsp;" : char}</span>`)
-          .join("");
+      // Title animation - emerging from below
+      if (titleRef.current && typeof window !== "undefined") {
+        // Set initial state - title hidden below
+        gsap.set(titleRef.current, {
+          opacity: 0,
+          y: 80,
+        });
 
-        gsap.fromTo(
-          titleRef.current.children,
-          {
-            opacity: 0,
-            y: 100,
-            rotateX: -90,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            rotateX: 0,
-            duration: 1,
-            stagger: 0.02,
-            ease: "power4.out",
-            delay: 0.3,
-          }
-        );
+        // Animate title emerging from below as one unit
+        gsap.to(titleRef.current, {
+          opacity: 1,
+          y: 0,
+          duration: 1,
+          ease: "power3.out",
+          delay: 0.3,
+        });
       }
 
       // Subtitle animation
-      if (subtitleRef.current) {
+      if (subtitleRef.current && typeof window !== "undefined") {
         gsap.fromTo(
           subtitleRef.current,
           {
@@ -112,7 +116,7 @@ export default function Hero() {
       }
 
       // Scroll indicator animation
-      if (scrollIndicatorRef.current) {
+      if (scrollIndicatorRef.current && typeof window !== "undefined") {
         gsap.fromTo(
           scrollIndicatorRef.current,
           {
@@ -130,7 +134,10 @@ export default function Hero() {
       }
     }, heroRef);
 
-    return () => ctx.revert();
+    return () => {
+      if (scrollCleanup) scrollCleanup();
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -147,7 +154,8 @@ export default function Hero() {
             className="absolute inset-0"
             style={{
               willChange: "transform",
-              transformOrigin: "center center"
+              transformOrigin: "center center",
+              transform: "scale(1.25)"
             }}
           >
             <Image
@@ -202,7 +210,9 @@ export default function Hero() {
       >
         <ScrollIndicator
           onClick={() => {
-            document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" });
+            if (typeof window !== "undefined") {
+              document.querySelector("#about")?.scrollIntoView({ behavior: "smooth" });
+            }
           }}
         />
       </div>

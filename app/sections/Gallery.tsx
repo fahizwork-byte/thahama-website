@@ -266,7 +266,7 @@ export default function Gallery() {
     <section
       id="gallery"
       ref={sectionRef}
-      className="py-20 md:py-32 bg-black relative overflow-hidden z-10"
+      className="py-20 md:py-32 bg-dark relative overflow-hidden z-10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <h2

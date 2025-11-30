@@ -23,20 +23,70 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const lastScrollY = useRef(0);
+  const hasAnimated = useRef(false);
+
+  // Entrance animation - navbar slides down from top on first load
+  useEffect(() => {
+    if (navRef.current && !hasAnimated.current && typeof window !== "undefined") {
+      // Small delay to ensure component is fully mounted
+      const timer = setTimeout(() => {
+        if (navRef.current) {
+          // Temporarily disable CSS transition to avoid conflicts
+          const originalTransition = navRef.current.style.transition;
+          navRef.current.style.transition = "none";
+
+          // Set initial state - navbar hidden above
+          gsap.set(navRef.current, {
+            y: -100,
+            force3D: true,
+            immediateRender: true,
+          });
+
+          // Animate navbar sliding down from top
+          gsap.to(navRef.current, {
+            y: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            delay: 0.2,
+            force3D: true,
+            overwrite: true,
+            onComplete: () => {
+              // Restore CSS transition after animation
+              if (navRef.current) {
+                navRef.current.style.transition = originalTransition || "";
+              }
+            },
+          });
+
+          hasAnimated.current = true;
+        }
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   useEffect(() => {
+    // Initialize lastScrollY with current scroll position
+    lastScrollY.current = window.scrollY;
+
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
+      const heroSectionHeight = window.innerHeight;
 
-      // Check if at top (increased threshold for better detection)
-      setIsAtTop(currentScrollY < 10);
+      // Check if within hero section (full viewport height)
+      const isInHeroSection = currentScrollY < heroSectionHeight;
+      setIsAtTop(isInHeroSection);
 
-      // Only show navbar when at the top, hide when scrolling in any direction
-      if (currentScrollY < 10) {
-        // Show when at top
+      // Show navbar when at top or scrolling up, hide when scrolling down
+      if (isInHeroSection) {
+        // Always show when in hero section (transparent, no blur)
         setIsVisible(true);
-      } else {
-        // Hide when scrolled down (regardless of scroll direction)
+      } else if (currentScrollY < lastScrollY.current) {
+        // Show when scrolling up (even if not in hero section)
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current && !isInHeroSection) {
+        // Hide when scrolling down (only if not in hero section)
         setIsVisible(false);
       }
 
@@ -82,7 +132,7 @@ export default function Navbar() {
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-1500 ease-in-out ${isVisible ? "translate-y-0" : "-translate-y-full"
         } ${isAtTop
           ? "py-6"
-          : "py-4"
+          : "py-4 bg-primary/95 backdrop-blur-md shadow-lg"
         }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
