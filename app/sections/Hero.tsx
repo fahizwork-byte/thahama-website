@@ -2,17 +2,71 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
 import ScrollIndicator from "@/app/components/ScrollIndicator";
+
+gsap.registerPlugin(ScrollTrigger);
 
 export default function Hero() {
   const heroRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Parallax zoom effect on background image
+      // Zoom in when scrolling up, zoom out when scrolling down
+      if (imageRef.current) {
+        // Set initial scale (zoomed in at top)
+        gsap.set(imageRef.current, { scale: 1.25 });
+
+        const handleScroll = () => {
+          const scrollY = window.scrollY;
+
+          // Calculate scale based on scroll position
+          // Max scroll distance for effect (800px for smooth transition)
+          const maxScroll = 800;
+          const scrollProgress = Math.min(scrollY / maxScroll, 1);
+
+          // Zoom out as you scroll down, zoom in as you scroll up
+          // At top (scrollY = 0): scale = 1.25 (zoomed in)
+          // After scrolling 800px: scale = 1.0 (normal size)
+          const scale = 1.25 - scrollProgress * 0.25;
+
+          // Clamp scale between 1.0 and 1.25
+          const clampedScale = Math.max(1.0, Math.min(1.25, scale));
+
+          gsap.to(imageRef.current, {
+            scale: clampedScale,
+            duration: 0.2,
+            ease: "none",
+          });
+        };
+
+        // Use requestAnimationFrame for smooth performance
+        let ticking = false;
+        const scrollHandler = () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              handleScroll();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        };
+
+        window.addEventListener("scroll", scrollHandler, { passive: true });
+
+        // Initial call to set correct scale
+        handleScroll();
+
+        return () => {
+          window.removeEventListener("scroll", scrollHandler);
+        };
+      }
       // Title animation with stagger
       if (titleRef.current) {
         const titleChars = titleRef.current.textContent?.split("") || [];
@@ -85,21 +139,29 @@ export default function Hero() {
       ref={heroRef}
       className="fixed top-0 left-0 w-full h-screen flex items-center justify-center overflow-hidden z-0"
     >
-      {/* Background Image */}
+      {/* Background Image with Parallax Zoom */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 -translate-y-12">
-          <Image
-            // src="/images/Family Shopping for Fresh Produce.png"
-            // src="/images/Untitled design (1).png"
-            // src="/images/ChatGPT Image Nov 29, 2025, 03_52_44 PM.png"
-            src="/images/ChatGPT Image Nov 29, 2025, 04_01_26 PM.png"
-            alt="/Family Shopping for Fresh Produce"
-            fill
-            className="object-cover"
-            priority
-
-            quality={90}
-          />
+          <div
+            ref={imageRef}
+            className="absolute inset-0"
+            style={{
+              willChange: "transform",
+              transformOrigin: "center center"
+            }}
+          >
+            <Image
+              // src="/images/Family Shopping for Fresh Produce.png"
+              // src="/images/Untitled design (1).png"
+              // src="/images/ChatGPT Image Nov 29, 2025, 03_52_44 PM.png"
+              src="/images/ChatGPT Image Nov 29, 2025, 04_01_26 PM.png"
+              alt="/Family Shopping for Fresh Produce"
+              fill
+              className="object-cover"
+              priority
+              quality={90}
+            />
+          </div>
         </div>
         {/* Light overlay for text readability */}
         <div className="absolute inset-0 bg-gradient-to-br from-primary/60 via-dark/50 to-primary/60" />

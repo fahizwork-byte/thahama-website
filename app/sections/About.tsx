@@ -19,9 +19,75 @@ export default function About() {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
+      // Parallax zoom effect on about image
+      // Zoom in when scrolling up, zoom out when scrolling down
+      if (imageRef.current && sectionRef.current) {
+        // Set initial scale (zoomed in)
+        gsap.set(imageRef.current, { scale: 1.25 });
+
+        const handleScroll = () => {
+          const scrollY = window.scrollY;
+          const sectionTop = sectionRef.current?.offsetTop || 0;
+          const sectionHeight = sectionRef.current?.offsetHeight || 0;
+          const windowHeight = window.innerHeight;
+          
+          // Calculate when section enters viewport
+          const sectionStart = sectionTop - windowHeight;
+          const sectionEnd = sectionTop + sectionHeight;
+          
+          // Calculate scroll progress relative to section
+          // When section is at top of viewport: progress = 0 (zoomed in)
+          // When section is scrolled past: progress = 1 (normal size)
+          let scrollProgress = 0;
+          
+          if (scrollY > sectionStart && scrollY < sectionEnd) {
+            // Section is in viewport
+            scrollProgress = (scrollY - sectionStart) / (sectionEnd - sectionStart);
+          } else if (scrollY >= sectionEnd) {
+            // Section is scrolled past
+            scrollProgress = 1;
+          }
+          
+          // Zoom out as you scroll down through the section
+          // At top: scale = 1.25 (zoomed in)
+          // At bottom: scale = 1.0 (normal size)
+          const scale = 1.25 - scrollProgress * 0.25;
+          
+          // Clamp scale between 1.0 and 1.25
+          const clampedScale = Math.max(1.0, Math.min(1.25, scale));
+          
+          gsap.to(imageRef.current, {
+            scale: clampedScale,
+            duration: 0.2,
+            ease: "none",
+          });
+        };
+
+        // Use requestAnimationFrame for smooth performance
+        let ticking = false;
+        const scrollHandler = () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              handleScroll();
+              ticking = false;
+            });
+            ticking = true;
+          }
+        };
+
+        window.addEventListener("scroll", scrollHandler, { passive: true });
+        
+        // Initial call to set correct scale
+        handleScroll();
+
+        return () => {
+          window.removeEventListener("scroll", scrollHandler);
+        };
+      }
       // Title animation
       if (titleRef.current) {
         gsap.fromTo(
@@ -154,12 +220,21 @@ export default function About() {
           </div>
 
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
-            <Image
-              src="/images/about_image.png"
-              alt="About Thahama Market"
-              fill
-              className="object-cover rounded-2xl"
-            />
+            <div
+              ref={imageRef}
+              className="absolute inset-0"
+              style={{ 
+                willChange: "transform",
+                transformOrigin: "center center"
+              }}
+            >
+              <Image
+                src="/images/about_image.png"
+                alt="About Thahama Market"
+                fill
+                className="object-cover rounded-2xl"
+              />
+            </div>
           </div>
         </div>
 

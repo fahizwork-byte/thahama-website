@@ -3,30 +3,129 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Image from "next/image";
 import Lightbox from "yet-another-react-lightbox";
 import "yet-another-react-lightbox/styles.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Placeholder gallery images - in production, these would be actual product/store images
-const galleryItems = [
-  { id: 1, category: "Store", alt: "Store Interior" },
-  { id: 2, category: "Products", alt: "Fresh Produce" },
-  { id: 3, category: "Bakery", alt: "Fresh Bakery Items" },
-  { id: 4, category: "Store", alt: "Shopping Aisle" },
-  { id: 5, category: "Products", alt: "Meat Selection" },
-  { id: 6, category: "Store", alt: "Store Entrance" },
-  { id: 7, category: "Bakery", alt: "Bread Display" },
-  { id: 8, category: "Products", alt: "Vegetables" },
-  { id: 9, category: "Store", alt: "Checkout Area" },
+// Gallery images with layout configuration
+interface GalleryItem {
+  id: number;
+  src: string;
+  alt: string;
+  isMain?: boolean; // Main hero image
+  colSpan?: number; // Columns to span
+  rowSpan?: number; // Rows to span
+  aspectRatio?: "square" | "wide" | "tall"; // Aspect ratio type
+}
+
+const galleryItems: GalleryItem[] = [
+  {
+    id: 1,
+    src: "/images/ChatGPT Image Nov 29, 2025, 04_01_26 PM.png",
+    alt: "Store Interior",
+    isMain: true,
+    colSpan: 2,
+    rowSpan: 2,
+    aspectRatio: "square",
+  },
+  {
+    id: 2,
+    src: "/images/Family Shopping for Fresh Produce.png",
+    alt: "Fresh Produce",
+    aspectRatio: "wide",
+  },
+  {
+    id: 3,
+    src: "/images/ChatGPT Image Nov 29, 2025, 03_37_33 PM.png",
+    alt: "Fresh Bakery Items",
+    aspectRatio: "tall",
+  },
+  {
+    id: 4,
+    src: "/images/Untitled design (1).png",
+    alt: "Shopping Aisle",
+    colSpan: 2,
+    aspectRatio: "wide",
+  },
+  {
+    id: 5,
+    src: "/images/ChatGPT Image Nov 29, 2025, 03_52_44 PM.png",
+    alt: "Store Entrance",
+    aspectRatio: "tall",
+  },
+  {
+    id: 6,
+    src: "/images/about_image.png",
+    alt: "Checkout Area",
+    aspectRatio: "square",
+  },
 ];
 
 export default function Gallery() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Calculate masonry row spans based on image heights
+  useEffect(() => {
+    const calculateMasonryLayout = () => {
+      if (!gridRef.current || window.innerWidth < 1024) return;
+
+      const rowHeight = 8; // Base row height in pixels (matches CSS)
+      const gap = 16; // Gap in pixels (gap-4 = 16px)
+      const items = itemRefs.current.filter(Boolean) as HTMLDivElement[];
+
+      items.forEach((item) => {
+        const img = item.querySelector("img");
+        if (img && img.complete) {
+          const itemHeight = item.offsetHeight;
+          const rowSpan = Math.ceil((itemHeight + gap) / (rowHeight + gap));
+          item.style.gridRowEnd = `span ${Math.max(rowSpan, 1)}`;
+        }
+      });
+    };
+
+    // Wait for images to load, then calculate layout
+    const images = gridRef.current?.querySelectorAll("img") || [];
+    let loadedCount = 0;
+    const totalImages = images.length;
+
+    const handleImageLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setTimeout(calculateMasonryLayout, 100);
+      }
+    };
+
+    images.forEach((img) => {
+      if (img.complete) {
+        handleImageLoad();
+      } else {
+        img.addEventListener("load", handleImageLoad, { once: true });
+      }
+    });
+
+    // Recalculate on resize
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setTimeout(calculateMasonryLayout, 100);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      images.forEach((img) => {
+        img.removeEventListener("load", handleImageLoad);
+      });
+    };
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -52,7 +151,7 @@ export default function Gallery() {
         );
       }
 
-      // Gallery items animation
+      // Gallery items animation - fade in and slide up with stagger
       if (gridRef.current) {
         const items = gridRef.current.querySelectorAll(".gallery-item");
 
@@ -60,24 +159,82 @@ export default function Gallery() {
           items,
           {
             opacity: 0,
-            scale: 0.8,
-            rotateZ: -5,
+            y: 40,
           },
           {
             opacity: 1,
-            scale: 1,
-            rotateZ: 0,
-            duration: 0.6,
-            stagger: 0.08,
-            ease: "power3.out",
+            y: 0,
+            duration: 0.8,
+            stagger: 0.1,
+            ease: "power2.out",
             scrollTrigger: {
               trigger: gridRef.current,
-              start: "top 70%",
+              start: "top 75%",
               toggleActions: "play none none none",
             },
           }
         );
       }
+
+      // Parallax zoom effect for all gallery images
+      const handleGalleryScroll = () => {
+        const scrollY = window.scrollY;
+        const windowHeight = window.innerHeight;
+
+        imageRefs.current.forEach((imageWrapper, index) => {
+          if (!imageWrapper) return;
+
+          const item = itemRefs.current[index];
+          if (!item) return;
+
+          const itemRect = item.getBoundingClientRect();
+          const itemTop = itemRect.top + scrollY;
+          const itemHeight = itemRect.height;
+
+          // Calculate when item enters viewport
+          const itemCenter = itemTop + itemHeight / 2;
+          const viewportCenter = scrollY + windowHeight / 2;
+
+          // Calculate distance from viewport center
+          const distanceFromCenter = Math.abs(viewportCenter - itemCenter);
+          const maxDistance = windowHeight;
+
+          // Calculate scale based on proximity to viewport center
+          // Closer to center = more zoomed in (1.15), further = less zoomed (1.0)
+          const proximityRatio = Math.max(0, 1 - distanceFromCenter / maxDistance);
+          const scale = 1.0 + proximityRatio * 0.15; // Scale between 1.0 and 1.15
+
+          // Clamp scale
+          const clampedScale = Math.max(1.0, Math.min(1.15, scale));
+
+          gsap.to(imageWrapper, {
+            scale: clampedScale,
+            duration: 0.3,
+            ease: "power1.out",
+          });
+        });
+      };
+
+      // Throttled scroll handler for gallery parallax
+      let galleryTicking = false;
+      const galleryScrollHandler = () => {
+        if (!galleryTicking) {
+          window.requestAnimationFrame(() => {
+            handleGalleryScroll();
+            galleryTicking = false;
+          });
+          galleryTicking = true;
+        }
+      };
+
+      window.addEventListener("scroll", galleryScrollHandler, { passive: true });
+
+      // Initial call
+      handleGalleryScroll();
+
+      return () => {
+        window.removeEventListener("scroll", galleryScrollHandler);
+      };
     }, sectionRef);
 
     return () => ctx.revert();
@@ -88,68 +245,194 @@ export default function Gallery() {
     setLightboxOpen(true);
   };
 
-  // Generate placeholder slides for lightbox
+  // Generate slides for lightbox
   const slides = galleryItems.map((item) => ({
-    src: `https://placehold.co/800x600/0F172A/FACC15?text=${item.alt.replace(/\s+/g, "+")}`,
+    src: item.src,
     alt: item.alt,
   }));
+
+  // Get aspect ratio class - only use on mobile, desktop uses natural heights for masonry
+  const getAspectClass = (item: GalleryItem) => {
+    // Only apply aspect ratios on mobile for consistency
+    if (item.aspectRatio === "wide") {
+      return "aspect-[16/10] md:aspect-auto";
+    } else if (item.aspectRatio === "tall") {
+      return "aspect-[3/4] md:aspect-auto";
+    }
+    return "aspect-square md:aspect-auto";
+  };
 
   return (
     <section
       id="gallery"
       ref={sectionRef}
-      className="py-20 md:py-32 bg-white relative overflow-hidden z-10"
+      className="py-20 md:py-32 bg-black relative overflow-hidden z-10"
     >
-      {/* Background Decoration */}
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <h2
           ref={titleRef}
-          className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-primary mb-6"
+          className="text-4xl md:text-5xl lg:text-6xl font-bold text-center text-white mb-6"
         >
           Our <span className="text-accent">Gallery</span>
         </h2>
 
-        <p className="text-center text-gray-600 text-lg mb-16 max-w-2xl mx-auto">
+        <p className="text-center text-gray-300 text-lg mb-16 max-w-2xl mx-auto">
           Take a look inside our stores and discover the quality we offer
         </p>
 
+        {/* Masonry Collage Grid - Pinterest/Dribbble style with auto-fill */}
         <div
           ref={gridRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="gallery-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         >
           {galleryItems.map((item, index) => (
             <div
               key={item.id}
-              className="gallery-item group relative aspect-square overflow-hidden rounded-2xl cursor-pointer shadow-lg hover:shadow-2xl transition-shadow duration-300"
+              ref={(el) => {
+                itemRefs.current[index] = el;
+              }}
+              className={`gallery-item ${getAspectClass(item)} group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 ease-out hover:scale-[1.02] hover:shadow-2xl hover:shadow-accent/30`}
               onClick={() => openLightbox(index)}
+              data-col-span={item.colSpan || 1}
+              data-row-span={item.rowSpan || 1}
+              data-item-index={index}
             >
-              {/* Placeholder image with gradient */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary via-dark to-primary flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-accent text-6xl mb-4">📷</div>
-                  <p className="text-white font-semibold text-lg">{item.alt}</p>
-                  <p className="text-gray-300 text-sm">{item.category}</p>
-                </div>
-              </div>
+              <div
+                ref={(el) => {
+                  imageRefs.current[index] = el;
+                }}
+                className="absolute inset-0 w-full h-full"
+                style={{
+                  willChange: "transform",
+                  transformOrigin: "center center",
+                }}
+              >
+                <Image
+                  src={item.src}
+                  alt={item.alt}
+                  width={800}
+                  height={1200}
+                  className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  style={{
+                    height: "auto",
+                    display: "block",
+                    maxWidth: "100%"
+                  }}
+                  onLoad={(e) => {
+                    // Trigger layout recalculation after image loads
+                    setTimeout(() => {
+                      if (window.innerWidth >= 1024) {
+                        const rowHeight = 8;
+                        const gap = 16;
+                        const item = itemRefs.current[index];
+                        if (item) {
+                          const img = e.currentTarget;
+                          if (img && img.complete) {
+                            const itemHeight = item.offsetHeight;
+                            const rowSpan = Math.ceil((itemHeight + gap) / (rowHeight + gap));
+                            item.style.gridRowEnd = `span ${Math.max(rowSpan, 1)}`;
+                          }
+                        }
+                      }
+                    }, 100);
+                  }}
+                />
 
-              {/* Overlay on hover */}
-              <div className="absolute inset-0 bg-accent/0 group-hover:bg-accent/20 transition-all duration-300 flex items-center justify-center">
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center">
+                {/* Subtle overlay on hover */}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 pointer-events-none rounded-lg" />
+
+                {/* Hover indicator */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <div className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
                     <span className="text-2xl">🔍</span>
                   </div>
                 </div>
               </div>
-
-              {/* Category badge */}
-              <div className="absolute top-4 left-4 bg-accent text-primary px-3 py-1 rounded-full text-xs font-bold">
-                {item.category}
-              </div>
             </div>
           ))}
         </div>
+
+        {/* Masonry-style CSS for tight packing with no gaps - Pinterest/Dribbble style */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .gallery-grid {
+              grid-auto-flow: dense;
+              align-items: start;
+            }
+
+            .gallery-item {
+              display: block;
+              break-inside: avoid;
+            }
+
+            .gallery-item > div {
+              width: 100%;
+              height: 100%;
+            }
+
+            /* Mobile: All items span 1 column with fixed aspect ratios */
+            @media (max-width: 767px) {
+              .gallery-item {
+                grid-column: span 1 !important;
+                grid-row: span 1 !important;
+              }
+
+              .gallery-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+              }
+            }
+            
+            /* Tablet: Masonry layout with spans */
+            @media (min-width: 768px) and (max-width: 1023px) {
+              .gallery-grid {
+                grid-auto-rows: 10px;
+              }
+
+              .gallery-item[data-col-span="2"] {
+                grid-column: span 2;
+              }
+
+              .gallery-item img {
+                width: 100%;
+                height: auto;
+                display: block;
+              }
+            }
+            
+            /* Desktop: Tight masonry layout with auto-fill - no gaps */
+            @media (min-width: 1024px) {
+              .gallery-grid {
+                grid-auto-rows: 8px;
+                grid-auto-flow: row dense;
+              }
+
+              .gallery-item[data-col-span="2"] {
+                grid-column: span 2;
+              }
+
+              .gallery-item img {
+                width: 100%;
+                height: auto;
+                display: block;
+              }
+
+              .gallery-item > div {
+                position: relative;
+                width: 100%;
+              }
+
+              /* Ensure tight packing */
+              .gallery-item {
+                margin: 0;
+                padding: 0;
+                min-height: 0;
+              }
+            }
+          `
+        }} />
       </div>
 
       {/* Lightbox */}
