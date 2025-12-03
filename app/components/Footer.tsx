@@ -1,17 +1,31 @@
+"use client";
+
 /**
- * Footer Component - Server Component
+ * Footer Component - Client Component
  * 
- * Static footer content that doesn't require client-side interactivity.
- * Converted to server component for better performance and SEO.
+ * Footer with company info, links, and social media.
+ * Converted to client component to support phone number copy functionality.
  * 
  * @component
  * @returns {JSX.Element} Footer with company info, links, and social media
  */
-import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiTwitter } from "react-icons/fi";
+import { useState } from "react";
+import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiTwitter, FiCheck } from "react-icons/fi";
 
 export default function Footer() {
-  // Get current year for copyright (server-side rendered)
+  // Get current year for copyright
   const currentYear = new Date().getFullYear();
+  const [copiedPhone, setCopiedPhone] = useState(false);
+
+  const copyToClipboard = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(true);
+      setTimeout(() => setCopiedPhone(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy phone number:", err);
+    }
+  };
 
   return (
     <footer className="bg-primary text-white relative z-10">
@@ -63,8 +77,17 @@ export default function Footer() {
             <h4 className="text-lg font-semibold mb-4 text-accent">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-center gap-2 text-gray-300">
-                <FiPhone className="text-accent" />
-                <span>+966 12 234 5678</span>
+                <FiPhone className="text-accent shrink-0" />
+                <button
+                  onClick={() => copyToClipboard("+966 12 234 5678")}
+                  className="hover:text-accent transition-all cursor-pointer flex items-center gap-2 underline"
+                  title="Click to copy"
+                >
+                  <span className="font-mono">+966 12 234 5678</span>
+                  {copiedPhone && (
+                    <FiCheck className="text-green-500 text-sm shrink-0" />
+                  )}
+                </button>
               </li>
               <li className="flex items-center gap-2 text-gray-300">
                 <FiMail className="text-accent" />

@@ -233,7 +233,7 @@ export default function Navbar() {
       {/* Mobile Menu */}
       <div
         ref={mobileMenuRef}
-        className="fixed top-0 right-0 bottom-0 w-64 bg-primary md:hidden shadow-2xl translate-x-full"
+        className="fixed top-0 right-0 bottom-0 w-64 bg-primary backdrop-blur-md md:hidden shadow-2xl translate-x-full z-50"
         style={{ transform: "translateX(100%)" }}
       >
         <div className="flex flex-col gap-6 pt-24 px-8">

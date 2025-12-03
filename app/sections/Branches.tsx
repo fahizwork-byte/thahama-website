@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FiMapPin, FiPhone, FiClock } from "react-icons/fi";
+import { FiMapPin, FiPhone, FiClock, FiCheck } from "react-icons/fi";
 import branchesData from "@/app/data/branches.json";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -12,6 +12,17 @@ export default function Branches() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const copyToClipboard = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy phone number:", err);
+    }
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -133,7 +144,16 @@ export default function Branches() {
                   <>
                     <div className="flex items-center gap-3">
                       <FiPhone className="text-accent text-xl shrink-0" />
-                      <p className="text-gray-600">{branch.phone}</p>
+                      <button
+                        onClick={() => copyToClipboard(branch.phone)}
+                        className="text-gray-600 hover:text-accent transition-all cursor-pointer flex items-center gap-2 underline"
+                        title="Click to copy"
+                      >
+                        <span className="font-mono">{branch.phone}</span>
+                        {copiedPhone === branch.phone && (
+                          <FiCheck className="text-green-500 text-sm shrink-0" />
+                        )}
+                      </button>
                     </div>
 
                     <div className="flex items-center gap-3">

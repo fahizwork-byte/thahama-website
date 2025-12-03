@@ -54,6 +54,8 @@ export default function Testimonials() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -102,18 +104,71 @@ export default function Testimonials() {
           },
         });
 
-        // Pause on hover
-        carousel.addEventListener("mouseenter", () => {
+        animationRef.current = carouselAnimation;
+
+        // Function to pause animation
+        const pauseAnimation = () => {
           carouselAnimation.timeScale(0);
+          // Clear any existing resume timeout
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+        };
+
+        // Function to resume animation after delay
+        const resumeAnimation = (delay: number = 3000) => {
+          // Clear any existing resume timeout
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+          // Resume after delay
+          resumeTimeoutRef.current = setTimeout(() => {
+            carouselAnimation.timeScale(1);
+          }, delay);
+        };
+
+        // Pause on hover
+        carousel.addEventListener("mouseenter", pauseAnimation);
+
+        const handleMouseLeave = () => {
+          carouselAnimation.timeScale(1);
+        };
+        carousel.addEventListener("mouseleave", handleMouseLeave);
+
+        // Pause on card click/touch and resume after 3 seconds
+        const handleCardInteraction = () => {
+          pauseAnimation();
+          resumeAnimation(3000); // Resume after 3 seconds
+        };
+
+        // Add event listeners to all cards (including duplicates)
+        const allCards = carousel.querySelectorAll(".testimonial-card");
+        allCards.forEach((card) => {
+          card.addEventListener("click", handleCardInteraction);
+          card.addEventListener("touchstart", handleCardInteraction, { passive: true });
         });
 
-        carousel.addEventListener("mouseleave", () => {
-          carouselAnimation.timeScale(1);
-        });
+        // Cleanup function
+        return () => {
+          carousel.removeEventListener("mouseenter", pauseAnimation);
+          carousel.removeEventListener("mouseleave", handleMouseLeave);
+          allCards.forEach((card) => {
+            card.removeEventListener("click", handleCardInteraction);
+            card.removeEventListener("touchstart", handleCardInteraction);
+          });
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+        };
       }
     }, sectionRef);
 
-    return () => ctx.revert();
+    return () => {
+      if (resumeTimeoutRef.current) {
+        clearTimeout(resumeTimeoutRef.current);
+      }
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -147,7 +202,7 @@ export default function Testimonials() {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="testimonial-card shrink-0 w-96 bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
+              className="testimonial-card shrink-0 w-64 md:w-96 bg-white p-5 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
             >
               {/* Stars */}
               <div className="flex gap-1 mb-4">

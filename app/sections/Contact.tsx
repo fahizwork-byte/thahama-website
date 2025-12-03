@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FiPhone, FiMail, FiMapPin, FiClock } from "react-icons/fi";
+import { FiPhone, FiMail, FiMapPin, FiClock, FiCheck } from "react-icons/fi";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,6 +11,17 @@ export default function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const copyToClipboard = async (phone: string) => {
+    try {
+      await navigator.clipboard.writeText(phone);
+      setCopiedPhone(phone);
+      setTimeout(() => setCopiedPhone(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy phone number:", err);
+    }
+  };
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -94,8 +105,26 @@ export default function Contact() {
                 </div>
                 <div>
                   <h3 className="font-bold text-primary text-lg mb-2">Phone</h3>
-                  <p className="text-gray-600">+966 12 234 5678</p>
-                  <p className="text-gray-600">+966 12 345 6789</p>
+                  <button
+                    onClick={() => copyToClipboard("+966 12 234 5678")}
+                    className="text-gray-600 hover:text-accent transition-all cursor-pointer flex items-center gap-2 w-full text-left py-1 underline"
+                    title="Click to copy"
+                  >
+                    <span className="font-mono">+966 12 234 5678</span>
+                    {copiedPhone === "+966 12 234 5678" && (
+                      <FiCheck className="text-green-500 text-sm shrink-0" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => copyToClipboard("+966 12 345 6789")}
+                    className="text-gray-600 hover:text-accent transition-all cursor-pointer flex items-center gap-2 w-full text-left py-1 underline mt-1"
+                    title="Click to copy"
+                  >
+                    <span className="font-mono">+966 12 345 6789</span>
+                    {copiedPhone === "+966 12 345 6789" && (
+                      <FiCheck className="text-green-500 text-sm shrink-0" />
+                    )}
+                  </button>
                 </div>
               </div>
             </div>
