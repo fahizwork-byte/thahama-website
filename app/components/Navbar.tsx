@@ -20,7 +20,7 @@
  */
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useLayoutEffect } from "react";
 import { gsap } from "gsap";
 import { FiMenu, FiX } from "react-icons/fi";
 
@@ -38,6 +38,7 @@ const navLinks = [
 export default function Navbar() {
   // State management
   const [isOpen, setIsOpen] = useState(false); // Mobile menu open/close state
+  const [isMenuRendered, setIsMenuRendered] = useState(false); // Controls if menu is in DOM for animations
   const [isVisible, setIsVisible] = useState(true); // Navbar visibility (hide/show on scroll)
   const [isAtTop, setIsAtTop] = useState(true); // Whether user is in hero section
 
@@ -140,25 +141,100 @@ export default function Navbar() {
   /**
    * Mobile Menu Animation Effect
    * 
-   * Animates mobile menu slide-in/out using GSAP.
-   * Menu slides from right (100% translateX) to visible (0).
+   * Animates mobile menu dropdown from top using GSAP.
+   * Uses useLayoutEffect to set initial state before paint to prevent glitches.
+   */
+  useLayoutEffect(() => {
+    if (!mobileMenuRef.current) return;
+
+    let animation: gsap.core.Tween | null = null;
+
+    if (isOpen && isMenuRendered) {
+      // Kill any existing animations
+      gsap.killTweensOf(mobileMenuRef.current);
+
+      // Set initial state immediately (before paint) to prevent flash
+      gsap.set(mobileMenuRef.current, {
+        y: -30,
+        opacity: 0,
+        scale: 0.9,
+        immediateRender: true,
+        force3D: true,
+      });
+
+      // Animate menu in from top after a single frame
+      requestAnimationFrame(() => {
+        if (mobileMenuRef.current && isOpen) {
+          animation = gsap.to(mobileMenuRef.current, {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.4,
+            ease: "power3.out",
+            force3D: true,
+            overwrite: true,
+          });
+        }
+      });
+    } else if (!isOpen && isMenuRendered) {
+      // Kill any existing animations
+      gsap.killTweensOf(mobileMenuRef.current);
+
+      // Animate menu out before removing from DOM
+      animation = gsap.to(mobileMenuRef.current, {
+        y: -30,
+        opacity: 0,
+        scale: 0.9,
+        duration: 0.3,
+        ease: "power2.in",
+        force3D: true,
+        overwrite: true,
+        onComplete: () => {
+          setIsMenuRendered(false);
+        },
+      });
+    }
+
+    return () => {
+      if (animation) {
+        animation.kill();
+      }
+    };
+  }, [isOpen, isMenuRendered]);
+
+  /**
+   * Click Outside Handler
+   * 
+   * Closes mobile menu when clicking outside of it.
    */
   useEffect(() => {
-    if (mobileMenuRef.current) {
-      if (isOpen) {
-        gsap.to(mobileMenuRef.current, {
-          x: 0,
-          duration: 0.4,
-          ease: "power3.out",
-        });
-      } else {
-        gsap.to(mobileMenuRef.current, {
-          x: "100%",
-          duration: 0.4,
-          ease: "power3.in",
-        });
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
+      // Check if click is outside menu and not on the menu button
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(target) &&
+        navRef.current &&
+        !navRef.current.querySelector('button[aria-label="Toggle menu"]')?.contains(target)
+      ) {
+        setIsOpen(false);
       }
-    }
+    };
+
+    // Add event listeners with a small delay to avoid immediate closure
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, [isOpen]);
 
   /**
@@ -221,7 +297,15 @@ export default function Navbar() {
 
           {/* Mobile Menu Button */}
           <button
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              if (!isOpen) {
+                // Set menu to render first, then open (React will batch these)
+                setIsMenuRendered(true);
+                setIsOpen(true);
+              } else {
+                setIsOpen(false);
+              }
+            }}
             className="md:hidden text-white text-2xl z-50"
             aria-label="Toggle menu"
           >
@@ -230,36 +314,46 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <div
-        ref={mobileMenuRef}
-        className="fixed top-0 right-0 bottom-0 w-64 bg-primary backdrop-blur-md md:hidden shadow-2xl translate-x-full z-50"
-        style={{ transform: "translateX(100%)" }}
-      >
-        <div className="flex flex-col gap-6 pt-24 px-8">
-          {navLinks.map((link, index) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => {
-                e.preventDefault();
-                scrollToSection(link.href);
-              }}
-              className="text-white hover:text-accent transition-colors duration-300 text-lg font-medium"
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              {link.name}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Mobile Menu Overlay */}
-      {isOpen && (
+      {/* Mobile Menu Overlay - Starts below navbar */}
+      {isOpen && isMenuRendered && (
         <div
-          className="fixed inset-0 bg-black/50 md:hidden z-40"
-          onClick={() => setIsOpen(false)}
+          className="fixed top-[88px] left-0 right-0 bottom-0 bg-black/40 backdrop-blur-sm md:hidden z-40 transition-opacity duration-300"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsOpen(false);
+          }}
+          onTouchStart={(e) => {
+            e.preventDefault();
+            setIsOpen(false);
+          }}
         />
+      )}
+
+      {/* Mobile Menu Dropdown Box */}
+      {isMenuRendered && (
+        <div
+          ref={mobileMenuRef}
+          className="fixed top-[88px] left-4 right-4 md:hidden z-50 bg-primary/98 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden max-w-sm mx-auto pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+          style={{ willChange: "transform, opacity" }}
+        >
+          <div className="flex flex-col py-4">
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(link.href);
+                }}
+                className="text-white hover:text-accent hover:bg-white/5 transition-all duration-200 text-base font-medium py-3 px-6 active:bg-white/10"
+              >
+                {link.name}
+              </a>
+            ))}
+          </div>
+        </div>
       )}
     </nav>
   );
