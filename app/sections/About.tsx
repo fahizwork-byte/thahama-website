@@ -38,7 +38,7 @@ export default function About() {
         // Zoom in when scrolling up, zoom out when scrolling down
         if (imageRef.current && sectionRef.current && typeof window !== "undefined") {
           // Set initial scale (zoomed in)
-          gsap.set(imageRef.current, { scale: 1.25 });
+          gsap.set(imageRef.current, { scale: 1.6 });
 
           const handleScroll = () => {
             if (typeof window === "undefined") return;
@@ -66,12 +66,12 @@ export default function About() {
             }
 
             // Zoom out as you scroll down through the section
-            // At top: scale = 1.25 (zoomed in)
+            // At top: scale = 1.6 (zoomed in)
             // At bottom: scale = 1.0 (normal size)
-            const scale = 1.25 - scrollProgress * 0.25;
+            const scale = 1.6 - scrollProgress * 0.6;
 
-            // Clamp scale between 1.0 and 1.25
-            const clampedScale = Math.max(1.0, Math.min(1.25, scale));
+            // Clamp scale between 1.0 and 1.6
+            const clampedScale = Math.max(1.0, Math.min(1.6, scale));
 
             gsap.to(imageRef.current, {
               scale: clampedScale,
@@ -106,131 +106,131 @@ export default function About() {
         }
         // Title animation
         if (titleRef.current) {
-        gsap.fromTo(
-          titleRef.current,
-          {
-            opacity: 0,
-            y: 50,
-          },
-          {
-            opacity: 1,
-            y: 0,
-            duration: 1,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: titleRef.current,
-              start: "top 80%",
-              end: "top 50%",
-              toggleActions: "play none none none",
+          gsap.fromTo(
+            titleRef.current,
+            {
+              opacity: 0,
+              y: 50,
             },
-          }
-        );
-      }
+            {
+              opacity: 1,
+              y: 0,
+              duration: 1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: titleRef.current,
+                start: "top 80%",
+                end: "top 50%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
+        }
 
         // Content animation
         if (contentRef.current) {
-        gsap.fromTo(
-          contentRef.current,
-          {
-            opacity: 0,
-            x: -50,
-          },
-          {
-            opacity: 1,
-            x: 0,
-            duration: 1,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: contentRef.current,
-              start: "top 80%",
-              end: "top 50%",
-              toggleActions: "play none none none",
+          gsap.fromTo(
+            contentRef.current,
+            {
+              opacity: 0,
+              x: -50,
             },
-          }
-        );
-      }
+            {
+              opacity: 1,
+              x: 0,
+              duration: 1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: contentRef.current,
+                start: "top 80%",
+                end: "top 50%",
+                toggleActions: "play none none none",
+              },
+            }
+          );
+        }
 
         // Stats animation with counter
         if (statsRef.current && typeof window !== "undefined") {
           const statElements = Array.from(statsRef.current.querySelectorAll(".stat-number"));
 
           if (statElements.length > 0) {
-          // Create a single ScrollTrigger that handles all counters
-          ScrollTrigger.create({
-            trigger: statsRef.current,
-            start: "top 75%",
-            once: true,
-            onEnter: () => {
-              statElements.forEach((element, index) => {
-                if (!element || index >= stats.length) return;
-                if (!(element instanceof HTMLElement)) return;
+            // Create a single ScrollTrigger that handles all counters
+            ScrollTrigger.create({
+              trigger: statsRef.current,
+              start: "top 75%",
+              once: true,
+              onEnter: () => {
+                statElements.forEach((element, index) => {
+                  if (!element || index >= stats.length) return;
+                  if (!(element instanceof HTMLElement)) return;
 
-                const target = stats[index].number;
-                const obj = { value: 0 };
+                  const target = stats[index].number;
+                  const obj = { value: 0 };
 
-                // Ensure initial value is 0
-                element.textContent = "0";
+                  // Ensure initial value is 0
+                  element.textContent = "0";
 
-                // Animate the counter
-                gsap.to(obj, {
-                  value: target,
-                  duration: 2,
-                  ease: "power2.out",
-                  onUpdate: () => {
-                    const currentValue = Math.round(obj.value);
-                    element.textContent = currentValue.toLocaleString();
-                  },
+                  // Animate the counter
+                  gsap.to(obj, {
+                    value: target,
+                    duration: 2,
+                    ease: "power2.out",
+                    onUpdate: () => {
+                      const currentValue = Math.round(obj.value);
+                      element.textContent = currentValue.toLocaleString();
+                    },
+                  });
                 });
-              });
-            },
-          });
-
-          // Fade-in animation for stats cards
-          gsap.fromTo(
-            statsRef.current.children,
-            {
-              opacity: 0,
-              y: 30,
-            },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-              stagger: 0.15,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: statsRef.current,
-                start: "top 75%",
-                toggleActions: "play none none none",
               },
-            }
-          );
+            });
 
-          // Fade-in animation for stats cards
-          gsap.fromTo(
-            statsRef.current.children,
-            {
-              opacity: 0,
-              y: 30,
-            },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.8,
-              stagger: 0.15,
-              ease: "power3.out",
-              scrollTrigger: {
-                trigger: statsRef.current,
-                start: "top 75%",
-                toggleActions: "play none none none",
+            // Fade-in animation for stats cards
+            gsap.fromTo(
+              statsRef.current.children,
+              {
+                opacity: 0,
+                y: 30,
               },
-            }
-          );
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: statsRef.current,
+                  start: "top 75%",
+                  toggleActions: "play none none none",
+                },
+              }
+            );
 
-          // Refresh ScrollTrigger to ensure it works
-          ScrollTrigger.refresh();
+            // Fade-in animation for stats cards
+            gsap.fromTo(
+              statsRef.current.children,
+              {
+                opacity: 0,
+                y: 30,
+              },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                stagger: 0.15,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: statsRef.current,
+                  start: "top 75%",
+                  toggleActions: "play none none none",
+                },
+              }
+            );
+
+            // Refresh ScrollTrigger to ensure it works
+            ScrollTrigger.refresh();
+          }
         }
-      }
       }, sectionRef);
 
       cleanup = () => {
@@ -289,7 +289,7 @@ export default function About() {
             <div
               ref={imageRef}
               className="absolute inset-0"
-              style={{ 
+              style={{
                 willChange: "transform",
                 transformOrigin: "center center"
               }}
