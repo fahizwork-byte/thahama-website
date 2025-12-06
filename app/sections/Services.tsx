@@ -135,19 +135,26 @@ export default function Services() {
             return (
               <div
                 key={index}
-                className="service-card group bg-light hover:bg-white p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-accent"
+                className="service-card group bg-light hover:bg-white p-4 md:p-8 rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 cursor-pointer border-2 border-transparent hover:border-accent"
               >
-                <div className="w-16 h-16 bg-accent/10 group-hover:bg-accent rounded-xl flex items-center justify-center mb-6 transition-all duration-300">
-                  <Icon className="text-3xl text-accent group-hover:text-white transition-colors duration-300" />
+                {/* Mobile: Horizontal layout with icon on left, Desktop: Vertical layout */}
+                <div className="flex flex-row md:flex-col items-start gap-3 md:gap-0">
+                  {/* Icon container */}
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-accent/10 group-hover:bg-accent rounded-xl flex items-center justify-center md:mb-6 transition-all duration-300 shrink-0">
+                    <Icon className="text-2xl md:text-3xl text-accent group-hover:text-white transition-colors duration-300" />
+                  </div>
+
+                  {/* Text content - stacked vertically */}
+                  <div className="flex-1 md:flex-none">
+                    <h3 className="text-lg md:text-xl font-bold text-primary mb-2 md:mb-3 group-hover:text-accent transition-colors duration-300">
+                      {service.title}
+                    </h3>
+
+                    <p className="text-sm md:text-base text-gray-600 leading-relaxed">
+                      {service.description}
+                    </p>
+                  </div>
                 </div>
-
-                <h3 className="text-xl font-bold text-primary mb-3 group-hover:text-accent transition-colors duration-300">
-                  {service.title}
-                </h3>
-
-                <p className="text-gray-600 leading-relaxed">
-                  {service.description}
-                </p>
               </div>
             );
           })}

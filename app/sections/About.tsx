@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Image from "next/image";
@@ -20,6 +20,7 @@ export default function About() {
   const contentRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     let cleanup: (() => void) | null = null;
@@ -270,19 +271,58 @@ export default function About() {
             <h3 className="text-2xl md:text-3xl font-bold text-primary mb-6">
               Who We Are
             </h3>
-            <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              THAHAMA:market is the fastest-growing supermarket chain in Saudi Arabia and the UAE,
-              dedicated to providing the highest quality products and exceptional customer service.
-            </p>
-            <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              Our commitment to freshness, quality, and community has made us a trusted name
-              across the region. From fresh produce to household essentials, we ensure every
-              product meets our rigorous standards.
-            </p>
-            <p className="text-gray-600 text-lg leading-relaxed">
-              With multiple branches strategically located throughout Jeddah and expanding to the UAE,
-              we&apos;re bringing premium shopping experiences closer to you.
-            </p>
+
+            {/* Desktop: Full text always visible */}
+            <div className="hidden lg:block">
+              <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                THAHAMA:market is the fastest-growing supermarket chain in Saudi Arabia and the UAE,
+                dedicated to providing the highest quality products and exceptional customer service.
+              </p>
+              <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                Our commitment to freshness, quality, and community has made us a trusted name
+                across the region. From fresh produce to household essentials, we ensure every
+                product meets our rigorous standards.
+              </p>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                With multiple branches strategically located throughout Jeddah and expanding to the UAE,
+                we&apos;re bringing premium shopping experiences closer to you.
+              </p>
+            </div>
+
+            {/* Mobile: Truncated text with read more */}
+            <div className="lg:hidden">
+              <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                THAHAMA:market is the fastest-growing supermarket chain in Saudi Arabia and the UAE,
+                dedicated to providing the highest quality products and exceptional customer service.
+              </p>
+
+              {isExpanded ? (
+                <>
+                  <p className="text-gray-600 text-lg leading-relaxed mb-6">
+                    Our commitment to freshness, quality, and community has made us a trusted name
+                    across the region. From fresh produce to household essentials, we ensure every
+                    product meets our rigorous standards.
+                  </p>
+                  <p className="text-gray-600 text-lg leading-relaxed mb-4">
+                    With multiple branches strategically located throughout Jeddah and expanding to the UAE,
+                    we&apos;re bringing premium shopping experiences closer to you.
+                  </p>
+                  <button
+                    onClick={() => setIsExpanded(false)}
+                    className="text-accent font-semibold hover:text-accent/80 transition-colors"
+                  >
+                    Read Less
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="text-accent font-semibold hover:text-accent/80 transition-colors"
+                >
+                  Read More
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-2xl">
@@ -314,11 +354,11 @@ export default function About() {
               key={index}
               className="text-center p-8 bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
             >
-              <div className="text-4xl md:text-5xl font-bold text-accent mb-2">
+              <div className="text-2xl md:text-5xl font-bold text-accent mb-2">
                 <span className="stat-number">0</span>
                 <span>{stat.suffix}</span>
               </div>
-              <div className="text-gray-600 font-medium">{stat.label}</div>
+              <div className="text-sm md:text-base text-gray-600 font-medium">{stat.label}</div>
             </div>
           ))}
         </div>

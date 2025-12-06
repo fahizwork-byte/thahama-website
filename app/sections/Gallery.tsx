@@ -67,10 +67,13 @@ export default function Gallery() {
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate masonry row spans based on image heights
   useEffect(() => {
@@ -176,8 +179,135 @@ export default function Gallery() {
         );
       }
 
-      // Parallax zoom effect for all gallery images
+      // Mobile carousel auto-scroll animation (only on mobile)
+      let carouselCleanup: (() => void) | null = null;
+
+      const initCarousel = () => {
+        if (!carouselRef.current || typeof window === "undefined" || window.innerWidth >= 768) {
+          return null;
+        }
+
+        const carousel = carouselRef.current;
+        const cards = carousel.querySelectorAll(".gallery-carousel-item");
+        if (cards.length === 0) return null;
+
+        // Clear any existing animation
+        if (animationRef.current) {
+          animationRef.current.kill();
+        }
+
+        const cardWidth = cards[0]?.clientWidth || 0;
+        const gap = 32; // gap-8 = 32px (2rem) - matching testimonials
+        const totalWidth = (cardWidth + gap) * galleryItems.length;
+
+        // Reset position and remove duplicates if they exist
+        gsap.set(carousel, { x: 0 });
+        const existingItems = carousel.querySelectorAll(".gallery-carousel-item");
+        if (existingItems.length > galleryItems.length) {
+          // Remove duplicates
+          Array.from(existingItems).slice(galleryItems.length).forEach((el) => el.remove());
+        }
+
+        // Duplicate for seamless loop
+        const clone = carousel.innerHTML;
+        carousel.innerHTML += clone;
+
+        // Infinite scroll animation
+        const carouselAnimation = gsap.to(carousel, {
+          x: -(totalWidth),
+          duration: 40,
+          ease: "none",
+          repeat: -1,
+          modifiers: {
+            x: gsap.utils.unitize((x) => parseFloat(x) % totalWidth),
+          },
+        });
+
+        animationRef.current = carouselAnimation;
+
+        // Function to pause animation
+        const pauseAnimation = () => {
+          carouselAnimation.timeScale(0);
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+        };
+
+        // Function to resume animation after delay
+        const resumeAnimation = (delay: number = 3000) => {
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+          resumeTimeoutRef.current = setTimeout(() => {
+            carouselAnimation.timeScale(1);
+          }, delay);
+        };
+
+        // Pause on hover (for tablets that might have hover)
+        carousel.addEventListener("mouseenter", pauseAnimation);
+        const handleMouseLeave = () => {
+          carouselAnimation.timeScale(1);
+        };
+        carousel.addEventListener("mouseleave", handleMouseLeave);
+
+        // Pause on card click/touch and resume after 3 seconds
+        const handleCardInteraction = () => {
+          pauseAnimation();
+          resumeAnimation(3000);
+        };
+
+        const allCards = carousel.querySelectorAll(".gallery-carousel-item");
+        allCards.forEach((card) => {
+          card.addEventListener("click", handleCardInteraction);
+          card.addEventListener("touchstart", handleCardInteraction, { passive: true });
+        });
+
+        // Return cleanup function
+        return () => {
+          carousel.removeEventListener("mouseenter", pauseAnimation);
+          carousel.removeEventListener("mouseleave", handleMouseLeave);
+          allCards.forEach((card) => {
+            card.removeEventListener("click", handleCardInteraction);
+            card.removeEventListener("touchstart", handleCardInteraction);
+          });
+          if (resumeTimeoutRef.current) {
+            clearTimeout(resumeTimeoutRef.current);
+          }
+        };
+      };
+
+      // Initialize carousel with a small delay to ensure DOM is ready
+      const timeoutId = setTimeout(() => {
+        carouselCleanup = initCarousel();
+      }, 100);
+
+      // Handle window resize
+      const handleResize = () => {
+        if (animationRef.current) {
+          animationRef.current.kill();
+          animationRef.current = null;
+        }
+        if (carouselCleanup) {
+          carouselCleanup();
+          carouselCleanup = null;
+        }
+        if (resumeTimeoutRef.current) {
+          clearTimeout(resumeTimeoutRef.current);
+        }
+        // Reinitialize if on mobile
+        setTimeout(() => {
+          carouselCleanup = initCarousel();
+        }, 100);
+      };
+
+      if (typeof window !== "undefined") {
+        window.addEventListener("resize", handleResize);
+      }
+
+      // Parallax zoom effect for all gallery images (desktop only)
       const handleGalleryScroll = () => {
+        if (typeof window !== "undefined" && window.innerWidth < 768) return; // Skip on mobile
+
         const scrollY = window.scrollY;
         const windowHeight = window.innerHeight;
 
@@ -215,10 +345,10 @@ export default function Gallery() {
         });
       };
 
-      // Throttled scroll handler for gallery parallax
+      // Throttled scroll handler for gallery parallax (desktop only)
       let galleryTicking = false;
       const galleryScrollHandler = () => {
-        if (!galleryTicking) {
+        if (!galleryTicking && typeof window !== "undefined" && window.innerWidth >= 768) {
           window.requestAnimationFrame(() => {
             handleGalleryScroll();
             galleryTicking = false;
@@ -227,13 +357,26 @@ export default function Gallery() {
         }
       };
 
-      window.addEventListener("scroll", galleryScrollHandler, { passive: true });
-
-      // Initial call
-      handleGalleryScroll();
+      if (typeof window !== "undefined" && window.innerWidth >= 768) {
+        window.addEventListener("scroll", galleryScrollHandler, { passive: true });
+        handleGalleryScroll();
+      }
 
       return () => {
-        window.removeEventListener("scroll", galleryScrollHandler);
+        clearTimeout(timeoutId);
+        if (typeof window !== "undefined") {
+          window.removeEventListener("scroll", galleryScrollHandler);
+          window.removeEventListener("resize", handleResize);
+        }
+        if (animationRef.current) {
+          animationRef.current.kill();
+        }
+        if (carouselCleanup) {
+          carouselCleanup();
+        }
+        if (resumeTimeoutRef.current) {
+          clearTimeout(resumeTimeoutRef.current);
+        }
       };
     }, sectionRef);
 
@@ -280,10 +423,44 @@ export default function Gallery() {
           Take a look inside our stores and discover the quality we offer
         </p>
 
-        {/* Masonry Collage Grid - Pinterest/Dribbble style with auto-fill */}
+        {/* Mobile: Horizontal Scrolling Carousel */}
+        <div className="md:hidden relative overflow-hidden -mx-4 sm:-mx-6">
+          <div
+            ref={carouselRef}
+            className="flex gap-8 will-change-transform px-4 sm:px-6"
+          >
+            {galleryItems.map((item, index) => (
+              <div
+                key={`mobile-${item.id}`}
+                className="gallery-carousel-item shrink-0 w-64 group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300"
+                onClick={() => openLightbox(index)}
+              >
+                <div className="aspect-square relative">
+                  <Image
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
+                    sizes="256px"
+                  />
+                  {/* Subtle overlay on hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 pointer-events-none rounded-lg" />
+                  {/* Hover indicator */}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                    <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center backdrop-blur-sm">
+                      <span className="text-xl">🔍</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Masonry Collage Grid - Pinterest/Dribbble style with auto-fill */}
         <div
           ref={gridRef}
-          className="gallery-grid grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+          className="hidden md:grid gallery-grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         >
           {galleryItems.map((item, index) => (
             <div

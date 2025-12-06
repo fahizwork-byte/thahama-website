@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiStar } from "react-icons/fi";
@@ -56,6 +56,7 @@ export default function Testimonials() {
   const carouselRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<gsap.core.Tween | null>(null);
   const resumeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -81,85 +82,87 @@ export default function Testimonials() {
         );
       }
 
-      // Carousel auto-scroll animation
-      if (carouselRef.current) {
+      // Carousel auto-scroll animation (desktop only)
+      if (carouselRef.current && typeof window !== "undefined" && window.innerWidth >= 768) {
         const carousel = carouselRef.current;
         const cards = carousel.querySelectorAll(".testimonial-card");
-        const cardWidth = cards[0]?.clientWidth || 0;
-        const gap = 32; // 2rem gap
-        const totalWidth = (cardWidth + gap) * testimonials.length;
+        if (cards.length > 0) {
+          const cardWidth = cards[0]?.clientWidth || 0;
+          const gap = 32; // 2rem gap
+          const totalWidth = (cardWidth + gap) * testimonials.length;
 
-        // Duplicate for seamless loop
-        const clone = carousel.innerHTML;
-        carousel.innerHTML += clone;
+          // Duplicate for seamless loop
+          const clone = carousel.innerHTML;
+          carousel.innerHTML += clone;
 
-        // Infinite scroll animation
-        const carouselAnimation = gsap.to(carousel, {
-          x: -(totalWidth),
-          duration: 40,
-          ease: "none",
-          repeat: -1,
-          modifiers: {
-            x: gsap.utils.unitize((x) => parseFloat(x) % totalWidth),
-          },
-        });
-
-        animationRef.current = carouselAnimation;
-
-        // Function to pause animation
-        const pauseAnimation = () => {
-          carouselAnimation.timeScale(0);
-          // Clear any existing resume timeout
-          if (resumeTimeoutRef.current) {
-            clearTimeout(resumeTimeoutRef.current);
-          }
-        };
-
-        // Function to resume animation after delay
-        const resumeAnimation = (delay: number = 3000) => {
-          // Clear any existing resume timeout
-          if (resumeTimeoutRef.current) {
-            clearTimeout(resumeTimeoutRef.current);
-          }
-          // Resume after delay
-          resumeTimeoutRef.current = setTimeout(() => {
-            carouselAnimation.timeScale(1);
-          }, delay);
-        };
-
-        // Pause on hover
-        carousel.addEventListener("mouseenter", pauseAnimation);
-
-        const handleMouseLeave = () => {
-          carouselAnimation.timeScale(1);
-        };
-        carousel.addEventListener("mouseleave", handleMouseLeave);
-
-        // Pause on card click/touch and resume after 3 seconds
-        const handleCardInteraction = () => {
-          pauseAnimation();
-          resumeAnimation(3000); // Resume after 3 seconds
-        };
-
-        // Add event listeners to all cards (including duplicates)
-        const allCards = carousel.querySelectorAll(".testimonial-card");
-        allCards.forEach((card) => {
-          card.addEventListener("click", handleCardInteraction);
-          card.addEventListener("touchstart", handleCardInteraction, { passive: true });
-        });
-
-        // Cleanup function
-        return () => {
-          carousel.removeEventListener("mouseenter", pauseAnimation);
-          carousel.removeEventListener("mouseleave", handleMouseLeave);
-          allCards.forEach((card) => {
-            card.removeEventListener("click", handleCardInteraction);
-            card.removeEventListener("touchstart", handleCardInteraction);
+          // Infinite scroll animation
+          const carouselAnimation = gsap.to(carousel, {
+            x: -(totalWidth),
+            duration: 40,
+            ease: "none",
+            repeat: -1,
+            modifiers: {
+              x: gsap.utils.unitize((x) => parseFloat(x) % totalWidth),
+            },
           });
-          if (resumeTimeoutRef.current) {
-            clearTimeout(resumeTimeoutRef.current);
-          }
-        };
+
+          animationRef.current = carouselAnimation;
+
+          // Function to pause animation
+          const pauseAnimation = () => {
+            carouselAnimation.timeScale(0);
+            // Clear any existing resume timeout
+            if (resumeTimeoutRef.current) {
+              clearTimeout(resumeTimeoutRef.current);
+            }
+          };
+
+          // Function to resume animation after delay
+          const resumeAnimation = (delay: number = 3000) => {
+            // Clear any existing resume timeout
+            if (resumeTimeoutRef.current) {
+              clearTimeout(resumeTimeoutRef.current);
+            }
+            // Resume after delay
+            resumeTimeoutRef.current = setTimeout(() => {
+              carouselAnimation.timeScale(1);
+            }, delay);
+          };
+
+          // Pause on hover
+          carousel.addEventListener("mouseenter", pauseAnimation);
+
+          const handleMouseLeave = () => {
+            carouselAnimation.timeScale(1);
+          };
+          carousel.addEventListener("mouseleave", handleMouseLeave);
+
+          // Pause on card click/touch and resume after 3 seconds
+          const handleCardInteraction = () => {
+            pauseAnimation();
+            resumeAnimation(3000); // Resume after 3 seconds
+          };
+
+          // Add event listeners to all cards (including duplicates)
+          const allCards = carousel.querySelectorAll(".testimonial-card");
+          allCards.forEach((card) => {
+            card.addEventListener("click", handleCardInteraction);
+            card.addEventListener("touchstart", handleCardInteraction, { passive: true });
+          });
+
+          // Cleanup function
+          return () => {
+            carousel.removeEventListener("mouseenter", pauseAnimation);
+            carousel.removeEventListener("mouseleave", handleMouseLeave);
+            allCards.forEach((card) => {
+              card.removeEventListener("click", handleCardInteraction);
+              card.removeEventListener("touchstart", handleCardInteraction);
+            });
+            if (resumeTimeoutRef.current) {
+              clearTimeout(resumeTimeoutRef.current);
+            }
+          };
+        }
       }
     }, sectionRef);
 
@@ -170,6 +173,18 @@ export default function Testimonials() {
       ctx.revert();
     };
   }, []);
+
+  const toggleExpanded = (id: number) => {
+    setExpandedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
 
   return (
     <section
@@ -193,8 +208,60 @@ export default function Testimonials() {
         </p>
       </div>
 
-      {/* Carousel Container */}
-      <div className="relative overflow-hidden">
+      {/* Mobile: List View with Expandable Cards */}
+      <div className="md:hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="space-y-4">
+          {testimonials.map((testimonial) => {
+            const isExpanded = expandedIds.has(testimonial.id);
+            const shouldTruncate = !isExpanded && testimonial.text.length > 60;
+
+            return (
+              <div
+                key={testimonial.id}
+                className="bg-white p-5 rounded-2xl shadow-lg transition-all duration-300 cursor-pointer"
+                onClick={() => toggleExpanded(testimonial.id)}
+              >
+                {/* Stars */}
+                <div className="flex gap-1 mb-3">
+                  {[...Array(testimonial.rating)].map((_, i) => (
+                    <FiStar key={i} className="text-accent fill-accent text-sm" />
+                  ))}
+                </div>
+
+                {/* Testimonial Text with Blur Effect */}
+                <div className="relative mb-4">
+                  <p
+                    className={`text-gray-700 leading-relaxed italic ${shouldTruncate ? "line-clamp-3" : ""
+                      }`}
+                  >
+                    &ldquo;{testimonial.text}&rdquo;
+                  </p>
+                  {shouldTruncate && (
+                    <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-white via-white/70 to-transparent pointer-events-none flex items-end justify-center pb-2">
+                      <span className="text-xs text-gray-500 font-medium">Tap to read more</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Customer Info */}
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-linear-to-br from-accent to-primary rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0">
+                    {testimonial.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-primary text-sm">{testimonial.name}</h4>
+                    <p className="text-gray-500 text-xs">{testimonial.nameArabic}</p>
+                    <p className="text-accent text-xs font-medium">{testimonial.role}</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop: Carousel Container */}
+      <div className="hidden md:block relative overflow-hidden">
         <div
           ref={carouselRef}
           className="flex gap-8 will-change-transform"
@@ -232,9 +299,9 @@ export default function Testimonials() {
         </div>
       </div>
 
-      {/* Gradient Overlays */}
-      <div className="absolute top-0 left-0 bottom-0 w-32 bg-linear-to-r from-light to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 bottom-0 w-32 bg-linear-to-l from-light to-transparent pointer-events-none" />
+      {/* Gradient Overlays - Desktop Only */}
+      <div className="hidden md:block absolute top-0 left-0 bottom-0 w-32 bg-linear-to-r from-light to-transparent pointer-events-none" />
+      <div className="hidden md:block absolute top-0 right-0 bottom-0 w-32 bg-linear-to-l from-light to-transparent pointer-events-none" />
     </section>
   );
 }
