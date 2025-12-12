@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiPhone, FiMail, FiMapPin, FiClock, FiCheck } from "react-icons/fi";
+import CityMap, { type Location } from "@/app/components/CityMap";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -170,30 +171,16 @@ export default function Contact() {
           </div>
 
           {/* Map */}
-          <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-[600px] relative">
-            <iframe
-              src="https://www.google.com/maps?q=21.801669569042936, 39.118167442446044&hl=en&z=15&output=embed"
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="w-full h-full"
-              title="Thahama Market Location"
-            />
-            <div className="absolute bottom-4 right-4 z-10">
-              <a
-                href="https://maps.app.goo.gl/MgYKXXQ9pCEGy3Vd8"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-accent hover:bg-accent/90 text-primary font-semibold px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center gap-2"
-              >
-                <FiMapPin className="text-lg" />
-                Open in Google Maps
-              </a>
-            </div>
-          </div>
+          <CityMap
+            locations={[
+              { city: "Jeddah", lat: 21.4858, lng: 39.1925 },
+              { city: "Al-Qahma", lat: 18.7458, lng: 41.9389 },
+              { city: "Dubai", lat: 25.2048, lng: 55.2708 },
+              { city: "Abu Dhabi", lat: 24.4539, lng: 54.3773 },
+            ]}
+            defaultCenter={[21.4858, 39.1925]}
+            defaultZoom={12}
+          />
         </div>
 
         {/* CTA Button */}

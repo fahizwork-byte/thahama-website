@@ -142,7 +142,7 @@ export function createGSAPContext(
   callback: (context: gsap.Context) => void,
   scope?: HTMLElement | null
 ): () => void {
-  const ctx = gsap.context(callback, scope);
+  const ctx = gsap.context(callback, scope || undefined);
   return () => ctx.revert();
 }
 
