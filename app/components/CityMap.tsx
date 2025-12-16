@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import dynamic from "next/dynamic";
 import type { Map } from "leaflet";
+import { FiMapPin } from "react-icons/fi";
 
 // Define the location type
 export interface Location {
@@ -59,27 +60,27 @@ const CityButtons = memo(function CityButtons({
   onCityClick: (location: Location) => void;
 }) {
   return (
-    <div className="mb-4 overflow-x-auto pb-2">
-      <div className="flex gap-3 min-w-max px-1">
-        {locations.map((location) => (
+    <div className="flex bg-white/80 backdrop-blur-xl border border-white/40 p-1.5 rounded-full shadow-lg gap-1 pointer-events-auto max-w-full overflow-x-auto no-scrollbar">
+      {locations.map((location) => {
+        const isActive = activeCity === location.city;
+        return (
           <button
             key={location.city}
             onClick={() => onCityClick(location)}
             className={`
-              px-6 py-3 rounded-lg font-semibold text-sm md:text-base
-              transition-all duration-300 transform hover:scale-105
-              whitespace-nowrap
-              ${
-                activeCity === location.city
-                  ? "bg-accent text-primary shadow-lg"
-                  : "bg-white text-primary hover:bg-accent/10 shadow-md hover:shadow-lg"
+              relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold
+              transition-all duration-300 ease-out whitespace-nowrap
+              ${isActive
+                ? "bg-primary text-white shadow-md transform scale-100"
+                : "text-gray-600 hover:bg-white/50 hover:text-primary active:scale-95"
               }
             `}
           >
+            <FiMapPin className={`text-base ${isActive ? "text-accent" : "text-gray-400"}`} />
             {location.city}
           </button>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 });
@@ -212,6 +213,7 @@ function LeafletMap({
   activeMarker,
   onMarkerClick,
   iconCache,
+  isInteractive,
 }: {
   locations: Location[];
   mapCenter: [number, number];
@@ -219,6 +221,7 @@ function LeafletMap({
   activeMarker: string | null;
   onMarkerClick: (location: Location) => void;
   iconCache: { active: any; default: any };
+  isInteractive: boolean;
 }) {
   // Type-safe require for MapContainer (client-side only, loaded dynamically)
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -232,7 +235,10 @@ function LeafletMap({
       zoom={mapZoom}
       style={{ height: "100%", width: "100%", zIndex: 1 }}
       zoomControl={true}
-      scrollWheelZoom={true}
+      scrollWheelZoom={isInteractive}
+      dragging={isInteractive}
+      touchZoom={isInteractive}
+      doubleClickZoom={isInteractive}
     >
       <MapContent
         locations={locations}
@@ -280,6 +286,7 @@ export default function CityMap({
   );
   const [mapZoom, setMapZoom] = useState<number>(defaultZoom);
   const [activeMarker, setActiveMarker] = useState<string | null>(null);
+  const [isInteracting, setIsInteracting] = useState(false);
 
   // Memoize icon creation - icons are created once and cached
   const iconCache = useMemo(() => {
@@ -381,15 +388,27 @@ export default function CityMap({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden h-[600px] relative">
-      {/* City Buttons */}
-      <div className="absolute top-4 left-4 right-4 z-1000 bg-white/95 backdrop-blur-sm p-3 rounded-lg shadow-md">
+    <div
+      className="bg-white rounded-2xl shadow-lg overflow-hidden h-[600px] relative"
+      onMouseLeave={() => setIsInteracting(false)}
+    >
+      {/* City Buttons - Centered Floating Capsule */}
+      <div className="absolute top-6 left-0 right-0 z-[1000] flex justify-center pointer-events-none px-4">
         <CityButtons
           locations={locations}
           activeCity={selectedCity}
           onCityClick={handleCityClick}
         />
       </div>
+
+      {/* Interaction Overlay */}
+      {!isInteracting && (
+        <div
+          className="absolute inset-0 z-10 flex items-center justify-center bg-black/5 cursor-pointer hover:bg-black/10 transition-colors duration-300"
+          onClick={() => setIsInteracting(true)}
+          title="Click to interact with map"
+        />
+      )}
 
       {/* Map Container */}
       {isMounted && iconCache.active && iconCache.default && (
@@ -400,6 +419,7 @@ export default function CityMap({
           activeMarker={activeMarker}
           onMarkerClick={handleMarkerClick}
           iconCache={iconCache}
+          isInteractive={isInteracting}
         />
       )}
     </div>

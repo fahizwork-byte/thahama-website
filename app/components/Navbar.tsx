@@ -32,9 +32,9 @@ import LanguageSwitcher from "./LanguageSwitcher";
 const navLinks = [
   { name: "home", href: "#home" },
   { name: "about", href: "#about" },
+  { name: "services", href: "#services" },
   { name: "branches", href: "#branches" },
   { name: "gallery", href: "#gallery" },
-  { name: "services", href: "#services" },
   { name: "contact", href: "#contact" },
 ];
 

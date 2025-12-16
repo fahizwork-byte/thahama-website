@@ -3,20 +3,20 @@
 
 :root {
   --primary: #0F172A;
-    --accent: #FF6B35;
-    --light: #F8FAFC;
-    --dark: #1E293B;
-    --gray: #64748B;
+  --accent: #FF6B35;
+  --light: #F8FAFC;
+  --dark: #1E293B;
+  --gray: #64748B;
 }
 
 
 @theme inline {
   --color-primary: var(--primary);
-    --color-accent: var(--accent);
-    --color-light: var(--light);
-    --color-dark: var(--dark);
-    --color-gray: var(--gray);
-    --font-sans: var(--font-inter);
+  --color-accent: var(--accent);
+  --color-light: var(--light);
+  --color-dark: var(--dark);
+  --color-gray: var(--gray);
+  --font-sans: var(--font-inter);
 }
 
 /* Only reset box-sizing, not margin/padding (Tailwind handles that) */
@@ -25,40 +25,41 @@
 *::after {
   box-sizing: border-box;
 }
+
 html {
   scroll-behavior: auto;
 }
 
 body {
   margin: 0;
-    padding: 0;
-    background: #ffffff;
-    color: var(--primary);
-    font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
-    overflow-x: hidden;
-  }
-  
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: var(--light);
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 4px;
-  }
-  
-  ::-webkit-scrollbar-thumb:hover {
-    background: #ff5722;
-  }
-  
-  /* Smooth animations */
-  .smooth-animation {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 0;
+  background: #ffffff;
+  color: var(--primary);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--light);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff5722;
+}
+
+/* Smooth animations */
+.smooth-animation {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Scroll indicator animation */
@@ -67,10 +68,12 @@ body {
     top: 8px;
     opacity: 1;
   }
+
   50% {
     top: 24px;
     opacity: 0;
   }
+
   100% {
     top: 8px;
     opacity: 1;
@@ -78,9 +81,12 @@ body {
 }
 
 @keyframes fadeInOut {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.9;
   }
+
   50% {
     opacity: 1;
   }
@@ -90,7 +96,8 @@ body {
 /* Improves initial render performance by skipping layout work for invisible content */
 section {
   content-visibility: auto;
-  contain-intrinsic-size: auto 500px; /* Estimated height to prevent layout shift */
+  contain-intrinsic-size: auto 500px;
+  /* Estimated height to prevent layout shift */
 }
 
 /* Hero section should always be visible (above fold) */
@@ -99,7 +106,16 @@ section#home {
   contain-intrinsic-size: auto;
 }
 
-/* Ensure sections maintain their layout when content-visibility is active */
-section > * {
-  content-visibility: auto;
+/* Utility to hide scrollbar for Firefox, Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
 }

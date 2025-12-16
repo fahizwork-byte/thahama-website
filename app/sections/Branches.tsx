@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FiMapPin, FiPhone, FiClock, FiCheck } from "react-icons/fi";
+import { FiMapPin, FiPhone, FiClock, FiCheck, FiArrowRight } from "react-icons/fi";
+import Link from "next/link";
 import { useLanguage } from "@/app/i18n/LanguageContext";
 
 const branchesConfig = [
@@ -131,7 +132,7 @@ export default function Branches() {
           ref={cardsRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
         >
-          {branchesConfig.map((branch) => (
+          {branchesConfig.slice(0, 3).map((branch) => (
             <div
               key={branch.id}
               className={`branch-card group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${branch.status === "coming_soon"
@@ -200,6 +201,17 @@ export default function Branches() {
               )}
             </div>
           ))}
+        </div>
+
+        {/* View All Button */}
+        <div className="mt-12 text-center">
+          <Link
+            href="/locations"
+            className="inline-flex items-center gap-2 bg-white text-primary px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 group border border-gray-100"
+          >
+            View All 30+ Locations
+            <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </div>
     </section>
