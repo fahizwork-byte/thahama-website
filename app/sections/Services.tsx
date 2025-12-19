@@ -3,42 +3,8 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { FiShoppingBag, FiTruck, FiCoffee, FiPackage, FiGift, FiHome, FiAward } from "react-icons/fi";
-
-gsap.registerPlugin(ScrollTrigger);
-
+import { siteContent } from "@/app/data/siteContent";
 import { useLanguage } from "@/app/i18n/LanguageContext";
-
-const services = [
-  {
-    icon: FiShoppingBag,
-    id: "shopping",
-  },
-  {
-    icon: FiTruck,
-    id: "delivery",
-  },
-  {
-    icon: FiCoffee,
-    id: "bakery",
-  },
-  {
-    icon: FiPackage,
-    id: "vegetables",
-  },
-  {
-    icon: FiGift,
-    id: "meat",
-  },
-  {
-    icon: FiHome,
-    id: "household",
-  },
-  {
-    icon: FiAward,
-    id: "rewards",
-  },
-];
 
 export default function Services() {
   const { t } = useLanguage();
@@ -126,7 +92,7 @@ export default function Services() {
           ref={cardsRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
         >
-          {services.map((service, index) => {
+          {siteContent.services.map((service, index) => {
             const Icon = service.icon;
             return (
               <div
@@ -143,11 +109,11 @@ export default function Services() {
                   {/* Text content - stacked vertically */}
                   <div className="flex-1 md:flex-none">
                     <h3 className="text-lg md:text-xl font-bold text-primary mb-2 md:mb-3 group-hover:text-accent transition-colors duration-300">
-                      {t(`services.items.${service.id}.title`)}
+                      {service.title}
                     </h3>
 
                     <p className="text-sm md:text-base text-gray-600 leading-relaxed">
-                      {t(`services.items.${service.id}.desc`)}
+                      {service.description}
                     </p>
                   </div>
                 </div>

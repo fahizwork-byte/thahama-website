@@ -6,46 +6,34 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiStar } from "react-icons/fi";
 import Image from "next/image";
 import { useLanguage } from "@/app/i18n/LanguageContext";
+import { siteContent } from "@/app/data/siteContent";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const testimonialsConfig = [
-  {
-    id: "ahmed",
-    name: "Ahmed Al-Shahrani",
-    nameArabic: "أحمد الشهراني",
-    rating: 5,
-    image: "/images/person1.png", // Placeholder, assuming images exist or using generic
-  },
-  {
-    id: "fatima",
-    name: "Fatima Mohammed",
-    nameArabic: "فاطمة محمد",
-    rating: 5,
-    image: "/images/person2.png",
-  },
-  {
-    id: "khalid",
-    name: "Khalid bin Saleh",
-    nameArabic: "خالد بن صالح",
-    rating: 5,
-    image: "/images/person3.png",
-  },
-  {
-    id: "sara",
-    name: "Sara Abdullah",
-    nameArabic: "سارة عبدالله",
-    rating: 5,
-    image: "/images/person1.png",
-  },
-  {
-    id: "mohammed",
-    name: "Mohammed Al-Ghamdi",
-    nameArabic: "محمد الغامدي",
-    rating: 5,
-    image: "/images/person2.png",
-  },
-];
+// Define type for Testimonial item if not imported
+interface TestimonialItem {
+  id: string;
+  name: string;
+  nameArabic: string;
+  rating: number;
+  image: string;
+  // Added properties for handling
+  review: string;
+  role: string;
+}
+
+// Convert siteContent.testimonials to compatible format
+// Since siteContent.testimonials is empty, this will be empty array
+// If it had data, we would map it here.
+const testimonialsConfig: TestimonialItem[] = siteContent.testimonials.map((t, i) => ({
+  id: `t-${i}`,
+  name: t.nameEn || "",
+  nameArabic: t.nameAr || "",
+  rating: t.rating || 5,
+  image: "/images/person1.png", // Default placeholder
+  review: t.review || "",
+  role: "Customer" // Default
+}));
 
 export default function Testimonials() {
   const { t, language } = useLanguage();
@@ -200,7 +188,7 @@ export default function Testimonials() {
 
       {/* Testimonial Text */}
       <p className="text-gray-700 leading-relaxed mb-6 italic">
-        &ldquo;{t(`testimonials.items.${testimonial.id}.text`)}&rdquo;
+        &ldquo;{testimonial.review}&rdquo;
       </p>
 
       {/* Customer Info */}
@@ -213,7 +201,7 @@ export default function Testimonials() {
             {language === 'ar' ? testimonial.nameArabic : testimonial.name}
           </h4>
           <p className="text-accent text-xs font-medium">
-            {t(`testimonials.items.${testimonial.id}.role`)}
+            {testimonial.role}
           </p>
         </div>
       </div>
@@ -247,7 +235,7 @@ export default function Testimonials() {
         <div className="space-y-4">
           {testimonialsConfig.map((testimonial) => {
             const isExpanded = expandedIds.has(testimonial.id);
-            const text = t(`testimonials.items.${testimonial.id}.text`);
+            const text = testimonial.review;
             const shouldTruncate = !isExpanded && text.length > 60;
 
             return (
@@ -288,7 +276,7 @@ export default function Testimonials() {
                       {language === 'ar' ? testimonial.nameArabic : testimonial.name}
                     </h4>
                     <p className="text-accent text-xs font-medium">
-                      {t(`testimonials.items.${testimonial.id}.role`)}
+                      {testimonial.role}
                     </p>
                   </div>
                 </div>

@@ -9,6 +9,7 @@ import { getOptimizedImagePath, getBlurPlaceholder } from "@/app/lib/image-utils
 gsap.registerPlugin(ScrollTrigger);
 
 import { useLanguage } from "@/app/i18n/LanguageContext";
+import { siteContent } from "@/app/data/siteContent";
 
 export default function About() {
   const { t } = useLanguage();
@@ -19,11 +20,25 @@ export default function About() {
   const imageRef = useRef<HTMLDivElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Helper to parse stats from string "20+" -> number: 20, suffix: "+"
+  const parseStat = (val: string, defaultSuffix: string) => {
+    const match = val.match(/^(\d+(?:\.\d+)?)([A-Za-z+]*)$/);
+    if (match) {
+      return { number: parseFloat(match[1]), suffix: match[2] };
+    }
+    return { number: 0, suffix: val }; // Fallback
+  };
+
+  const branchesStat = parseStat(siteContent.statistics.branches, "+");
+  const customersStat = parseStat(siteContent.statistics.customers, "+");
+  const experienceStat = parseStat(siteContent.statistics.years, "+");
+  const productsStat = parseStat(siteContent.statistics.products, "+");
+
   const stats = [
-    { number: 5, suffix: "+", label: t("about.stats.branches") },
-    { number: 10000, suffix: "+", label: t("about.stats.customers") },
-    { number: 15, suffix: "+", label: t("about.stats.experience") },
-    { number: 500, suffix: "+", label: t("about.stats.products") },
+    { number: branchesStat.number, suffix: branchesStat.suffix, label: t("about.stats.branches") },
+    { number: customersStat.number, suffix: customersStat.suffix, label: t("about.stats.customers") },
+    { number: experienceStat.number, suffix: experienceStat.suffix, label: t("about.stats.experience") },
+    { number: productsStat.number, suffix: productsStat.suffix, label: t("about.stats.products") },
   ];
 
   useEffect(() => {
@@ -289,29 +304,29 @@ export default function About() {
             {/* Desktop: Full text always visible */}
             <div className="hidden lg:block">
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                {t("about.p1")}
+                {siteContent.about.paragraph1}
               </p>
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                {t("about.p2")}
+                {siteContent.about.paragraph2}
               </p>
               <p className="text-gray-600 text-lg leading-relaxed">
-                {t("about.p3")}
+                {siteContent.about.paragraph3}
               </p>
             </div>
 
             {/* Mobile: Truncated text with read more */}
             <div className="lg:hidden">
               <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                {t("about.p1")}
+                {siteContent.about.paragraph1}
               </p>
 
               {isExpanded ? (
                 <>
                   <p className="text-gray-600 text-lg leading-relaxed mb-6">
-                    {t("about.p2")}
+                    {siteContent.about.paragraph2}
                   </p>
                   <p className="text-gray-600 text-lg leading-relaxed mb-4">
-                    {t("about.p3")}
+                    {siteContent.about.paragraph3}
                   </p>
                   <button
                     onClick={() => setIsExpanded(false)}

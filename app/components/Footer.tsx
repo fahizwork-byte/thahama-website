@@ -12,6 +12,7 @@
 import { useState } from "react";
 import { FiPhone, FiMail, FiMapPin, FiFacebook, FiInstagram, FiTwitter, FiCheck } from "react-icons/fi";
 import { useLanguage } from "../i18n/LanguageContext";
+import { siteContent } from "@/app/data/siteContent";
 
 export default function Footer() {
   // Get current year for copyright
@@ -43,7 +44,7 @@ export default function Footer() {
               {t("footer.description")}
             </p>
             <p className="text-gray-400 text-sm">
-              {t("footer.tagline")}
+              {siteContent.hero.tagline}
             </p>
           </div>
 
@@ -81,11 +82,11 @@ export default function Footer() {
               <li className="flex items-center gap-2 text-gray-300">
                 <FiPhone className="text-accent shrink-0" />
                 <button
-                  onClick={() => copyToClipboard("+966 12 234 5678")}
+                  onClick={() => copyToClipboard(siteContent.hero.phone)}
                   className="hover:text-accent transition-all cursor-pointer flex items-center gap-2 underline"
                   title="Click to copy"
                 >
-                  <span className="font-mono" dir="ltr">+966 12 234 5678</span>
+                  <span className="font-mono" dir="ltr">{siteContent.hero.phone}</span>
                   {copiedPhone && (
                     <FiCheck className="text-green-500 text-sm shrink-0" />
                   )}
@@ -93,11 +94,11 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2 text-gray-300">
                 <FiMail className="text-accent" />
-                <span>info@thahama.market</span>
+                <span>{siteContent.hero.email}</span>
               </li>
               <li className="flex items-start gap-2 text-gray-300">
                 <FiMapPin className="text-accent mt-1" />
-                <span>{t("footer.address")}</span>
+                <span>{siteContent.hero.address}</span>
               </li>
             </ul>
           </div>
@@ -106,27 +107,33 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4 text-accent">{t("footer.openingHours")}</h4>
             <p className="text-gray-300 mb-6">
-              {t("footer.hours")}
+              {siteContent.hero.businessHours}
             </p>
             <div className="flex gap-4">
-              <a
-                href="#"
-                className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
-              >
-                <FiFacebook className="text-accent hover:text-primary" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
-              >
-                <FiInstagram className="text-accent hover:text-primary" />
-              </a>
-              <a
-                href="#"
-                className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
-              >
-                <FiTwitter className="text-accent hover:text-primary" />
-              </a>
+              {siteContent.socialLinks.facebook && (
+                <a
+                  href={siteContent.socialLinks.facebook}
+                  className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
+                >
+                  <FiFacebook className="text-accent hover:text-primary" />
+                </a>
+              )}
+              {siteContent.socialLinks.instagram && (
+                <a
+                  href={siteContent.socialLinks.instagram}
+                  className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
+                >
+                  <FiInstagram className="text-accent hover:text-primary" />
+                </a>
+              )}
+              {siteContent.socialLinks.twitter && (
+                <a
+                  href={siteContent.socialLinks.twitter}
+                  className="w-10 h-10 bg-accent/10 hover:bg-accent rounded-full flex items-center justify-center transition-all"
+                >
+                  <FiTwitter className="text-accent hover:text-primary" />
+                </a>
+              )}
             </div>
           </div>
         </div>

@@ -6,6 +6,8 @@ import { gsap } from "gsap";
 import { FiSearch, FiMapPin, FiNavigation, FiPhone, FiClock, FiX, FiFilter } from "react-icons/fi";
 import { useLanguage } from "../i18n/LanguageContext";
 
+import { siteContent } from "@/app/data/siteContent";
+
 // --- Types ---
 export interface StoreLocation {
     id: string;
@@ -19,44 +21,61 @@ export interface StoreLocation {
     lng: number;
 }
 
+// --- Coordinates Helper ---
+// Approximate coordinates for cities/areas mentioned in the data
+const COORDINATES_MAP: Record<string, { lat: number; lng: number }> = {
+    "Jeddah": { lat: 21.4858, lng: 39.1925 },
+    "Wadi Qudaid": { lat: 22.3333, lng: 39.5833 }, // Approximate
+    "Khulais": { lat: 22.1469, lng: 39.2981 },
+    "Wadi Stharah": { lat: 22.5, lng: 39.7 }, // Approximate
+    "Duba, Tabuk": { lat: 27.3516, lng: 35.6963 },
+    "Al Qaseem": { lat: 26.3475, lng: 43.9735 }, // Buraydah/Qassim
+    "Al Jumoom, Makkah": { lat: 21.6167, lng: 39.7 },
+    "Al Sharaya, Makkah": { lat: 21.4333, lng: 39.95 },
+    "Asfan Road": { lat: 21.8, lng: 39.3 }, // Approximate
+    "Asfan": { lat: 21.9167, lng: 39.3333 },
+    "Abyar": { lat: 22.0, lng: 39.4 }, // Approximate
+    "Riyadh": { lat: 24.7136, lng: 46.6753 },
+    "Dammam": { lat: 26.4207, lng: 50.0888 },
+    "Dubai": { lat: 25.2048, lng: 55.2708 },
+    "Abu Dhabi": { lat: 24.4539, lng: 54.3773 },
+};
+
 // --- Mock Data ---
 const generateStores = (): StoreLocation[] => {
-    const cities = [
-        { name: "Riyadh", lat: 24.7136, lng: 46.6753, count: 12 },
-        { name: "Jeddah", lat: 21.4858, lng: 39.1925, count: 10 },
-        { name: "Dammam", lat: 26.4207, lng: 50.0888, count: 5 },
-        { name: "Dubai", lat: 25.2048, lng: 55.2708, count: 4 },
-        { name: "Abu Dhabi", lat: 24.4539, lng: 54.3773, count: 3 },
-    ];
+    return siteContent.branches.map((branch, index) => {
+        // Try to find a matching location for coordinates
+        let coords = { lat: 21.4858, lng: 39.1925 }; // Default to Jeddah
 
-    let stores: StoreLocation[] = [];
-    let idCounter = 1;
-
-    cities.forEach((city) => {
-        for (let i = 0; i < city.count; i++) {
-            // Randomize location slightly around city center
-            const latOffset = (Math.random() - 0.5) * 0.15;
-            const lngOffset = (Math.random() - 0.5) * 0.15;
-
-            stores.push({
-                id: `store-${idCounter++}`,
-                name: `${city.name} Branch ${i + 1}`,
-                city: city.name,
-                address: `King Fahd Road, District ${i + 1}, ${city.name}`,
-                phone: "+966 12 345 6789",
-                hours: "09:00 AM - 11:00 PM",
-                status: Math.random() > 0.1 ? "open" : "coming_soon",
-                lat: city.lat + latOffset,
-                lng: city.lng + lngOffset,
-            });
+        // Simple string matching for coordinates
+        for (const [key, val] of Object.entries(COORDINATES_MAP)) {
+            if (branch.address.includes(key) || branch.nameEn.includes(key) || branch.nameAr.includes(key)) {
+                coords = val;
+                break;
+            }
         }
-    });
 
-    return stores;
+        // Add small random offset so markers don't perfectly overlap if they have same base location
+        const latOffset = (Math.random() - 0.5) * 0.01;
+        const lngOffset = (Math.random() - 0.5) * 0.01;
+
+        return {
+            id: `store-${index + 1}`,
+            name: branch.nameEn,
+            city: branch.address.split(',')[0] || "Unknown", // Approximate city from address
+            address: branch.address,
+            phone: branch.phone,
+            hours: branch.hours,
+            status: branch.status === "open" ? "open" : "coming_soon",
+            lat: coords.lat + latOffset,
+            lng: coords.lng + lngOffset,
+        };
+    });
 };
 
 const STORES_DATA = generateStores();
-const CITIES = ["All", "Riyadh", "Jeddah", "Dammam", "Dubai", "Abu Dhabi"];
+// Derive unique cities from the data for the filter
+const CITIES = ["All", ...Array.from(new Set(STORES_DATA.map(s => s.city)))].sort();
 
 // --- Map Component (Client Side Only) ---
 // We define this inside to avoid SSR issues with Leaflet
@@ -218,7 +237,7 @@ export default function StoreLocator() {
         w-full md:w-[450px] h-[70vh] md:h-full 
         flex flex-col border-t md:border-r border-gray-200
         transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
-        ${isMobileListOpen ? "translate-y-0" : "translate-y-[100%]"}
+        ${isMobileListOpen ? "translate-y-0" : "translate-y-full"}
         bottom-0 md:translate-y-0 md:top-0 md:left-0
       `}>
 
@@ -347,7 +366,7 @@ export default function StoreLocator() {
                 {!isMobileListOpen && (
                     <button
                         onClick={() => setIsMobileListOpen(true)}
-                        className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 bg-primary text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-2 z-[1000] animate-in fade-in zoom-in duration-300"
+                        className="md:hidden absolute bottom-6 left-1/2 -translate-x-1/2 bg-primary text-white px-6 py-3 rounded-full shadow-xl flex items-center gap-2 z-50 animate-in fade-in zoom-in duration-300"
                     >
                         <FiFilter /> View List
                     </button>

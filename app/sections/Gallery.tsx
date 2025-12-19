@@ -8,6 +8,8 @@ import dynamic from "next/dynamic";
 import { getOptimizedImagePath, getBlurPlaceholder, getImageSizes } from "@/app/lib/image-utils";
 import { useLanguage } from "@/app/i18n/LanguageContext";
 
+import { siteContent } from "@/app/data/siteContent";
+
 // Lazy load lightbox - only load when user opens it
 const Lightbox = dynamic(
   () => import("yet-another-react-lightbox").then((mod) => mod.default),
@@ -34,42 +36,14 @@ interface GalleryItem {
   aspectRatio?: "square" | "wide" | "tall"; // Aspect ratio type
 }
 
-const galleryItems: GalleryItem[] = [
-  {
-    id: "interior",
-    src: getOptimizedImagePath("/images/ChatGPT Image Nov 29, 2025, 04_01_26 PM.png"),
-    isMain: true,
-    colSpan: 2,
-    rowSpan: 2,
-    aspectRatio: "square",
-  },
-  {
-    id: "produce",
-    src: getOptimizedImagePath("/images/Family Shopping for Fresh Produce.png"),
-    aspectRatio: "wide",
-  },
-  {
-    id: "bakery",
-    src: getOptimizedImagePath("/images/ChatGPT Image Nov 29, 2025, 03_37_33 PM.png"),
-    aspectRatio: "tall",
-  },
-  {
-    id: "aisle",
-    src: getOptimizedImagePath("/images/Untitled design (1).png"),
-    colSpan: 2,
-    aspectRatio: "wide",
-  },
-  {
-    id: "entrance",
-    src: getOptimizedImagePath("/images/ChatGPT Image Nov 29, 2025, 03_52_44 PM.png"),
-    aspectRatio: "tall",
-  },
-  {
-    id: "checkout",
-    src: getOptimizedImagePath("/images/about_image.png"),
-    aspectRatio: "square",
-  },
-];
+const galleryItems: GalleryItem[] = siteContent.gallery.map((url, index) => ({
+  id: `img-${index}`,
+  src: url,
+  // Assign dummy layouts or default
+  colSpan: index % 4 === 0 ? 2 : 1,
+  rowSpan: index % 4 === 0 ? 2 : 1,
+  aspectRatio: "square"
+}));
 
 export default function Gallery() {
   const { t } = useLanguage();
@@ -418,7 +392,7 @@ export default function Gallery() {
   // Generate slides for lightbox
   const slides = galleryItems.map((item) => ({
     src: item.src,
-    alt: t(`gallery.items.${item.id}`),
+    alt: t("gallery.title"), // Fallback title
   }));
 
   // Get aspect ratio class - only use on mobile, desktop uses natural heights for masonry
@@ -465,7 +439,7 @@ export default function Gallery() {
                 <div className="aspect-square relative">
                   <Image
                     src={item.src}
-                    alt={t(`gallery.items.${item.id}`)}
+                    alt={t("gallery.title")}
                     fill
                     className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-lg"
                     sizes="256px"
@@ -515,7 +489,7 @@ export default function Gallery() {
               >
                 <Image
                   src={item.src}
-                  alt={t(`gallery.items.${item.id}`)}
+                  alt={t("gallery.title")}
                   width={800}
                   height={1200}
                   className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"

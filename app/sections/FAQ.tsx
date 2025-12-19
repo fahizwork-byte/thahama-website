@@ -8,10 +8,9 @@ import { FiChevronDown } from "react-icons/fi";
 gsap.registerPlugin(ScrollTrigger);
 
 import { useLanguage } from "@/app/i18n/LanguageContext";
+import { siteContent } from "@/app/data/siteContent";
 
 gsap.registerPlugin(ScrollTrigger);
-
-const faqIds = ["hours", "delivery", "loyalty", "freshness", "payments", "returns"];
 
 export default function FAQ() {
   const { t } = useLanguage();
@@ -99,9 +98,9 @@ export default function FAQ() {
         </p>
 
         <div ref={containerRef} className="space-y-4">
-          {faqIds.map((id, index) => (
+          {siteContent.faq.map((item, index) => (
             <div
-              key={id}
+              key={item.id}
               className={`faq-item border border-gray-200 rounded-2xl overflow-hidden transition-all duration-300 ${openIndex === index ? "bg-light shadow-md border-accent/30" : "bg-white hover:border-accent/50"
                 }`}
             >
@@ -112,7 +111,7 @@ export default function FAQ() {
               >
                 <span className={`text-lg md:text-xl font-bold transition-colors duration-300 ${openIndex === index ? "text-accent" : "text-primary"
                   }`}>
-                  {t(`faq.items.${id}.question`)}
+                  {item.question}
                 </span>
                 <span className={`ml-4 rtl:mr-4 rtl:ml-0 transform transition-transform duration-300 text-accent text-xl ${openIndex === index ? "rotate-180" : ""
                   }`}>
@@ -125,7 +124,7 @@ export default function FAQ() {
                   }`}
               >
                 <div className="px-6 pb-6 text-gray-600 leading-relaxed">
-                  {t(`faq.items.${id}.answer`)}
+                  {item.answer}
                 </div>
               </div>
             </div>

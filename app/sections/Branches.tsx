@@ -6,37 +6,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { FiMapPin, FiPhone, FiClock, FiCheck, FiArrowRight } from "react-icons/fi";
 import Link from "next/link";
 import { useLanguage } from "@/app/i18n/LanguageContext";
-
-const branchesConfig = [
-  {
-    id: "hamdaniyah",
-    phone: "+966 12 234 5678",
-    status: "open",
-  },
-  {
-    id: "riyadh",
-    phone: "+966 12 345 6789",
-    status: "open",
-  },
-  {
-    id: "qahma",
-    phone: "+966 12 456 7890",
-    status: "open",
-  },
-  {
-    id: "dubai",
-    phone: "+971 4 XXX XXXX",
-    status: "coming_soon",
-  },
-  {
-    id: "abuDhabi",
-    phone: "+971 2 XXX XXXX",
-    status: "coming_soon",
-  },
-];
+import { siteContent } from "@/app/data/siteContent";
 
 export default function Branches() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -132,9 +105,9 @@ export default function Branches() {
           ref={cardsRef}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
         >
-          {branchesConfig.slice(0, 3).map((branch) => (
+          {siteContent.branches.slice(0, 3).map((branch, index) => (
             <div
-              key={branch.id}
+              key={index}
               className={`branch-card group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${branch.status === "coming_soon"
                 ? "border-gray-300 opacity-75"
                 : "border-transparent hover:border-accent"
@@ -154,15 +127,15 @@ export default function Branches() {
               )}
 
               <h3 className="text-2xl font-bold text-primary mb-2 group-hover:text-accent transition-colors duration-300">
-                {t(`branches.items.${branch.id}.name`)}
+                {language === 'ar' ? branch.nameAr : branch.nameEn}
               </h3>
 
               <div className="space-y-4 mt-6">
                 <div className="flex items-start gap-3">
                   <FiMapPin className="text-accent text-xl mt-1 shrink-0" />
                   <div>
-                    <p className="font-semibold text-primary">{t(`branches.items.${branch.id}.city`)}</p>
-                    <p className="text-gray-600 text-sm">{t(`branches.items.${branch.id}.address`)}</p>
+                    {/* <p className="font-semibold text-primary">{branch.address}</p> */}
+                    <p className="text-gray-600 text-sm">{branch.address}</p>
                   </div>
                 </div>
 
@@ -184,7 +157,7 @@ export default function Branches() {
 
                     <div className="flex items-center gap-3">
                       <FiClock className="text-accent text-xl shrink-0" />
-                      <p className="text-gray-600">{t(`branches.items.${branch.id}.hours`)}</p>
+                      <p className="text-gray-600">{branch.hours}</p>
                     </div>
                   </>
                 )}
@@ -209,7 +182,7 @@ export default function Branches() {
             href="/locations"
             className="inline-flex items-center gap-2 bg-white text-primary px-8 py-3 rounded-full font-semibold shadow-lg hover:shadow-xl hover:bg-gray-50 transition-all duration-300 group border border-gray-100"
           >
-            View All 30+ Locations
+            View All {siteContent.statistics.branches} Locations
             <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
