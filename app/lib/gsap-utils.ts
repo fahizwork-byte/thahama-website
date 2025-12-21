@@ -85,11 +85,35 @@ export function createStaggerAnimation(
     duration?: number;
     stagger?: number;
     ease?: string;
+    trigger?: HTMLElement | null; // Optional trigger for scroll animation
   }
 ) {
   if (!elements || elements.length === 0) return null;
   
-  const { y = 40, duration = 0.8, stagger = 0.1, ease = gsapConfig.ease.quick } = options || {};
+  const { 
+    y = 40, 
+    duration = 0.8, 
+    stagger = 0.1, 
+    ease = gsapConfig.ease.quick,
+    trigger = null 
+  } = options || {};
+  
+  const vars: gsap.TweenVars = {
+    opacity: 1,
+    y: 0,
+    duration,
+    stagger,
+    ease,
+  };
+
+  // Add scrollTrigger if a trigger element is provided
+  if (trigger) {
+    vars.scrollTrigger = {
+      trigger: trigger,
+      start: gsapConfig.scrollTrigger.start,
+      toggleActions: gsapConfig.scrollTrigger.toggleActions,
+    };
+  }
   
   return gsap.fromTo(
     elements,
@@ -97,13 +121,7 @@ export function createStaggerAnimation(
       opacity: 0,
       y,
     },
-    {
-      opacity: 1,
-      y: 0,
-      duration,
-      stagger,
-      ease,
-    }
+    vars
   );
 }
 

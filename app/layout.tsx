@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
 import { LanguageProvider } from "./i18n/LanguageContext";
+import { DeviceProvider } from "./context/DeviceContext";
 import { cookieName, fallbackLng } from "./i18n/settings";
 
 const inter = Inter({
@@ -95,8 +96,9 @@ export default async function RootLayout({
         {/* Note: Next.js font optimization already handles this, but explicit hints can help */}
       </head>
       <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
-        <LanguageProvider initialLanguage={lang}>
-          {/* Structured Data (JSON-LD) for SEO */}
+        <DeviceProvider>
+          <LanguageProvider initialLanguage={lang}>
+            {/* Structured Data (JSON-LD) for SEO */}
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
@@ -126,9 +128,10 @@ export default async function RootLayout({
               }),
             }}
           />
-          {children}
-          <ServiceWorkerRegistration />
-        </LanguageProvider>
+            {children}
+            <ServiceWorkerRegistration />
+          </LanguageProvider>
+        </DeviceProvider>
       </body>
     </html>
   );

@@ -26,6 +26,7 @@ import { FiMenu, FiX } from "react-icons/fi";
 import Image from "next/image";
 import { useLanguage } from "../i18n/LanguageContext";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { useDevice } from "@/app/hooks/useDevice";
 
 // Navigation links configuration
 // Static data - could be moved to a config file if needed
@@ -45,12 +46,22 @@ export default function Navbar() {
   const [isVisible, setIsVisible] = useState(true); // Navbar visibility (hide/show on scroll)
   const [isAtTop, setIsAtTop] = useState(true); // Whether user is in hero section
   const { t } = useLanguage();
+  const { isDesktop } = useDevice();
 
   // Refs for DOM elements and animation tracking
   const navRef = useRef<HTMLElement>(null); // Main navbar element
   const mobileMenuRef = useRef<HTMLDivElement>(null); // Mobile menu drawer
   const lastScrollY = useRef(0); // Track last scroll position for direction detection
   const hasAnimated = useRef(false); // Track if entrance animation has played
+
+  /**
+   * Auto-close mobile menu when switching to desktop view
+   */
+  useEffect(() => {
+    if (isDesktop && isOpen) {
+      setIsOpen(false);
+    }
+  }, [isDesktop, isOpen]);
 
   /**
    * Entrance Animation Effect

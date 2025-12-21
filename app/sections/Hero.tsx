@@ -7,6 +7,8 @@ import Image from "next/image";
 import ScrollIndicator from "@/app/components/ScrollIndicator";
 import { getOptimizedImagePath, getBlurPlaceholder } from "@/app/lib/image-utils";
 import { siteContent } from "@/app/data/siteContent";
+import { useDevice } from "@/app/hooks/useDevice";
+import { createGSAPContext } from "@/app/lib/gsap-utils";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,42 +18,43 @@ export default function Hero() {
   const subtitleRef = useRef<HTMLParagraphElement>(null);
   const scrollIndicatorRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const { isMobile, isTablet } = useDevice();
 
   useEffect(() => {
     let scrollCleanup: (() => void) | null = null;
 
-    const ctx = gsap.context(() => {
-      // Parallax zoom effect on background image
-      // Zoom in when scrolling up, zoom out when scrolling down
-      if (imageRef.current && typeof window !== "undefined") {
+    const cleanupGSAP = createGSAPContext(() => {
+      // 1. Parallax zoom effect on background image
+      // We simplify or disable this on mobile to improve performance
+      const shouldAnimateParallax = !isMobile && imageRef.current;
+
+      if (shouldAnimateParallax && typeof window !== "undefined") {
         // Calculate scale based on scroll position
         const calculateScale = (scrollY: number) => {
           const maxScroll = 800;
           const scrollProgress = Math.min(scrollY / maxScroll, 1);
+          // Scale from 1.25 down to 1.0
           const scale = 1.25 - scrollProgress * 0.25;
           return Math.max(1.0, Math.min(1.25, scale));
         };
 
-        // Get initial scroll position and set scale
+        // Get initial scroll position
         const initialScrollY = window.scrollY;
         const initialScale = calculateScale(initialScrollY);
 
-        // Only update if not already at the correct scale (prevents unnecessary animation on mount)
         if (initialScrollY > 0) {
           gsap.set(imageRef.current, { scale: initialScale });
         }
 
         const handleScroll = () => {
-          if (typeof window === "undefined" || !imageRef.current) return;
-
+          if (!imageRef.current) return;
           const scrollY = window.scrollY;
           const clampedScale = calculateScale(scrollY);
 
-          // Add will-change when animation is active
+          // Performance: Add will-change only when active
           if (scrollY > 0 && scrollY < 800) {
             imageRef.current.style.willChange = "transform";
           } else {
-            // Remove will-change when animation is complete
             imageRef.current.style.willChange = "auto";
           }
 
@@ -63,7 +66,7 @@ export default function Hero() {
           });
         };
 
-        // Use requestAnimationFrame for smooth performance
+        // Throttled scroll handler using requestAnimationFrame
         let ticking = false;
         const scrollHandler = () => {
           if (!ticking) {
@@ -76,28 +79,19 @@ export default function Hero() {
         };
 
         window.addEventListener("scroll", scrollHandler, { passive: true });
+        if (initialScrollY > 0) handleScroll();
 
-        // Only call handleScroll if we're not at the top (to avoid unnecessary animation)
-        if (initialScrollY > 0) {
-          handleScroll();
-        }
-
-        // Store cleanup function
         scrollCleanup = () => {
-          if (typeof window !== "undefined") {
-            window.removeEventListener("scroll", scrollHandler);
-          }
+          window.removeEventListener("scroll", scrollHandler);
         };
+      } else if (imageRef.current) {
+        // Static state for mobile/fallback
+        gsap.set(imageRef.current, { scale: 1.1 }); // Slight zoom for impact
       }
-      // Title animation - emerging from below
-      if (titleRef.current && typeof window !== "undefined") {
-        // Set initial state - title hidden below
-        gsap.set(titleRef.current, {
-          opacity: 0,
-          y: 80,
-        });
 
-        // Animate title emerging from below as one unit
+      // 2. Title animation - emerging from below
+      if (titleRef.current) {
+        gsap.set(titleRef.current, { opacity: 0, y: 80 });
         gsap.to(titleRef.current, {
           opacity: 1,
           y: 0,
@@ -107,14 +101,10 @@ export default function Hero() {
         });
       }
 
-      // Subtitle animation
-      if (subtitleRef.current && typeof window !== "undefined") {
-        gsap.fromTo(
-          subtitleRef.current,
-          {
-            opacity: 0,
-            y: 50,
-          },
+      // 3. Subtitle animation
+      if (subtitleRef.current) {
+        gsap.fromTo(subtitleRef.current,
+          { opacity: 0, y: 50 },
           {
             opacity: 1,
             y: 0,
@@ -125,14 +115,10 @@ export default function Hero() {
         );
       }
 
-      // Scroll indicator animation
-      if (scrollIndicatorRef.current && typeof window !== "undefined") {
-        gsap.fromTo(
-          scrollIndicatorRef.current,
-          {
-            opacity: 0,
-            y: -20,
-          },
+      // 4. Scroll indicator animation
+      if (scrollIndicatorRef.current) {
+        gsap.fromTo(scrollIndicatorRef.current,
+          { opacity: 0, y: -20 },
           {
             opacity: 1,
             y: 0,
@@ -142,13 +128,13 @@ export default function Hero() {
           }
         );
       }
-    }, heroRef);
+    }, heroRef.current);
 
     return () => {
       if (scrollCleanup) scrollCleanup();
-      ctx.revert();
+      cleanupGSAP();
     };
-  }, []);
+  }, [isMobile, isTablet]); // Re-run if device type changes
 
   return (
     <section
@@ -164,7 +150,7 @@ export default function Hero() {
             className="absolute inset-0"
             style={{
               transformOrigin: "center center",
-              transform: "scale(1.25)"
+              transform: isMobile ? "scale(1.1)" : "scale(1.25)",
             }}
           >
             <Image
@@ -173,7 +159,7 @@ export default function Hero() {
               fill
               className="object-cover"
               priority
-              quality={90}
+              quality={isMobile ? 75 : 90} // Lower quality on mobile for speed
               placeholder="blur"
               blurDataURL={getBlurPlaceholder("ChatGPT Image Nov 29, 2025, 04_01_26 PM")}
               sizes="100vw"
@@ -184,12 +170,13 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/60 via-dark/50 to-primary/60" />
       </div>
 
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 opacity-10 z-[1]">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-accent rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse delay-1000" />
-      </div>
-
+      {/* Animated Background Elements - Reduced on mobile */}
+      {!isMobile && (
+        <div className="absolute inset-0 opacity-10 z-[1]">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-accent rounded-full blur-3xl animate-pulse" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse delay-1000" />
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
@@ -207,11 +194,6 @@ export default function Hero() {
         >
           {siteContent.hero.tagline}
         </p>
-
-
-        {/* <p className="text-lg md:text-xl text-white max-w-2xl mx-auto mb-12">
-          أسواق تهامة - Experience quality, freshness, and exceptional service
-        </p> */}
       </div>
 
       {/* Scroll Indicator */}
@@ -230,4 +212,3 @@ export default function Hero() {
     </section>
   );
 }
-
