@@ -167,12 +167,12 @@ export default function Hero() {
           </div>
         </div>
         {/* Light overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/60 via-dark/50 to-primary/60" />
+        <div className="absolute inset-0 bg-linear-to-br from-primary/60 via-dark/50 to-primary/60" />
       </div>
 
       {/* Animated Background Elements - Reduced on mobile */}
       {!isMobile && (
-        <div className="absolute inset-0 opacity-10 z-[1]">
+        <div className="absolute inset-0 opacity-10 z-1">
           <div className="absolute top-20 left-10 w-72 h-72 bg-accent rounded-full blur-3xl animate-pulse" />
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent rounded-full blur-3xl animate-pulse delay-1000" />
         </div>
@@ -182,7 +182,7 @@ export default function Hero() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full -translate-y-16 md:-translate-y-20">
         <h1
           ref={titleRef}
-          className="text-3xl sm:text-4xl md:text-7xl lg:text-8xl font-bold mb-6 perspective-1000 break-words whitespace-normal leading-tight"
+          className="text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 perspective-1000 wrap-break-word whitespace-normal leading-tight tracking-tight"
         >
           <span className="text-white">THAHAMA</span>
           <span className="text-accent">:market</span>

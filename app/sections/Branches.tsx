@@ -43,7 +43,7 @@ export default function Branches() {
   return (
     <SectionWrapper
       id="branches"
-      className="bg-light z-10"
+      className="bg-light z-10 pt-8! md:pt-16!"
       aria-label={t("branches.title")}
     >
       {/* Background Decoration */}

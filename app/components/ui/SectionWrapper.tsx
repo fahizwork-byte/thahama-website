@@ -71,7 +71,7 @@ export default function SectionWrapper({
     >
       <div 
         ref={contentRef}
-        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 opacity-0" // Start invisible for animation
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 ${disableAnimation ? "" : "opacity-0"}`} // Start invisible only if animating
       >
         {children}
       </div>
