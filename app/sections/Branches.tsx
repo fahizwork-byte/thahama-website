@@ -1,17 +1,39 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { FiMapPin, FiPhone, FiClock, FiCheck, FiArrowRight } from "react-icons/fi";
+import { useEffect, useRef, useState, useMemo, Suspense } from "react";
+import { FiMapPin, FiPhone, FiClock, FiCheck, FiArrowRight, FiX } from "react-icons/fi";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useLanguage } from "@/app/i18n/LanguageContext";
 import { siteContent } from "@/app/data/siteContent";
 import SectionWrapper from "@/app/components/ui/SectionWrapper";
 import { createGSAPContext, createStaggerAnimation } from "@/app/lib/gsap-utils";
 
-export default function Branches() {
+function BranchesContent() {
   const { t, language } = useLanguage();
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const cardsRef = useRef<HTMLDivElement>(null);
   const [copiedPhone, setCopiedPhone] = useState<string | null>(null);
+
+  const activeServiceId = searchParams.get("service");
+
+  const filteredBranches = useMemo(() => {
+    if (!activeServiceId) return siteContent.branches.slice(0, 3);
+
+    // Logic to filter branches based on service
+    // Since data is limited, we simulate filtering:
+    return siteContent.branches.filter((_, index) => {
+      if (activeServiceId === "delivery") return index === 0; // "Only in 1 branch"
+      if (activeServiceId === "bakery") return index < 3; // "3 branches"
+      if (activeServiceId === "meat") return false; // "None"
+      return true; // Default: available everywhere
+    }).slice(0, 3); // Still limit to 3 for now or show all if specifically filtered? Let's show filtered list.
+  }, [activeServiceId]);
+
+  const activeServiceTitle = activeServiceId
+    ? siteContent.services.find(s => s.id === activeServiceId)?.title
+    : null;
 
   const copyToClipboard = async (phone: string) => {
     try {
@@ -23,9 +45,14 @@ export default function Branches() {
     }
   };
 
+  const clearFilter = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("service");
+    window.history.pushState({}, "", url.toString());
+  };
+
   useEffect(() => {
-    // Only handle internal stagger animation for cards
-    // Section fade-in is handled by SectionWrapper
+    // Re-run animation when list changes
     const cleanup = createGSAPContext(() => {
       if (cardsRef.current) {
         const cards = cardsRef.current.querySelectorAll(".branch-card");
@@ -38,14 +65,10 @@ export default function Branches() {
     }, cardsRef.current);
 
     return cleanup;
-  }, []);
+  }, [filteredBranches]);
 
   return (
-    <SectionWrapper
-      id="branches"
-      className="bg-light z-10 pt-8! md:pt-16!"
-      aria-label={t("branches.title")}
-    >
+    <>
       {/* Background Decoration */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl -z-10" />
 
@@ -57,79 +80,103 @@ export default function Branches() {
         {t("branches.subtitle")}
       </p>
 
-      <div
-        ref={cardsRef}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
-      >
-        {siteContent.branches.slice(0, 3).map((branch, index) => (
-          <div
-            key={index}
-            className={`branch-card group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 opacity-0 ${branch.status === "coming_soon"
-              ? "border-gray-300 opacity-75"
-              : "border-transparent hover:border-accent"
-              }`}
-          >
-            {/* Status Badge */}
-            {branch.status === "coming_soon" && (
-              <div className="inline-block bg-accent text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">
-                {t("branches.status.comingSoon")}
-              </div>
-            )}
+      {/* Active Filter Indicator */}
+      {activeServiceTitle && (
+        <div className="flex justify-center mb-8 animate-fade-in">
+          <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/20 px-4 py-2 rounded-full text-accent font-medium">
+            <span>Filtering by service: <strong>{activeServiceTitle}</strong></span>
+            <button
+              onClick={clearFilter}
+              className="hover:bg-accent/20 p-1 rounded-full transition-colors"
+            >
+              <FiX />
+            </button>
+          </div>
+        </div>
+      )}
 
-            {branch.status === "open" && (
-              <div className="inline-block bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
-                {t("branches.status.open")}
-              </div>
-            )}
-
-            <h3 className="text-2xl font-bold text-primary mb-2 group-hover:text-accent transition-colors duration-300">
-              {language === 'ar' ? branch.nameAr : branch.nameEn}
-            </h3>
-
-            <div className="space-y-4 mt-6">
-              <div className="flex items-start gap-3">
-                <FiMapPin className="text-accent text-xl mt-1 shrink-0" />
-                <div>
-                  <p className="text-gray-600 text-sm">{branch.address}</p>
+      {filteredBranches.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm max-w-2xl mx-auto">
+          <p className="text-gray-500 text-lg">No branches currently availble for this service.</p>
+          <button onClick={clearFilter} className="mt-4 text-accent font-semibold hover:underline">
+            View all branches
+          </button>
+        </div>
+      ) : (
+        <div
+          ref={cardsRef}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8"
+        >
+          {filteredBranches.map((branch, index) => (
+            <div
+              key={index}
+              className={`branch-card group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 opacity-0 ${branch.status === "coming_soon"
+                ? "border-gray-300 opacity-75"
+                : "border-transparent hover:border-accent"
+                }`}
+            >
+              {/* Status Badge */}
+              {branch.status === "coming_soon" && (
+                <div className="inline-block bg-accent text-primary text-xs font-bold px-3 py-1 rounded-full mb-4">
+                  {t("branches.status.comingSoon")}
                 </div>
+              )}
+
+              {branch.status === "open" && (
+                <div className="inline-block bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+                  {t("branches.status.open")}
+                </div>
+              )}
+
+              <h3 className="text-2xl font-bold text-primary mb-2 group-hover:text-accent transition-colors duration-300">
+                {language === 'ar' ? branch.nameAr : branch.nameEn}
+              </h3>
+
+              <div className="space-y-4 mt-6">
+                <div className="flex items-start gap-3">
+                  <FiMapPin className="text-accent text-xl mt-1 shrink-0" />
+                  <div>
+                    <p className="text-gray-600 text-sm">{branch.address}</p>
+                  </div>
+                </div>
+
+                {branch.status === "open" && (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <FiPhone className="text-accent text-xl shrink-0" />
+                      <button
+                        onClick={() => copyToClipboard(branch.phone)}
+                        className="text-gray-600 hover:text-accent transition-all cursor-pointer flex items-center gap-2 underline"
+                        title="Click to copy"
+                      >
+                        <span className="font-mono" dir="ltr">{branch.phone}</span>
+                        {copiedPhone === branch.phone && (
+                          <FiCheck className="text-green-500 text-sm shrink-0" />
+                        )}
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <FiClock className="text-accent text-xl shrink-0" />
+                      <p className="text-gray-600">{branch.hours}</p>
+                    </div>
+                  </>
+                )}
+
+                {branch.status === "coming_soon" && (
+                  <p className="text-gray-500 italic">{t("branches.stayTuned")}</p>
+                )}
               </div>
 
               {branch.status === "open" && (
-                <>
-                  <div className="flex items-center gap-3">
-                    <FiPhone className="text-accent text-xl shrink-0" />
-                    <button
-                      onClick={() => copyToClipboard(branch.phone)}
-                      className="text-gray-600 hover:text-accent transition-all cursor-pointer flex items-center gap-2 underline"
-                      title="Click to copy"
-                    >
-                      <span className="font-mono" dir="ltr">{branch.phone}</span>
-                      {copiedPhone === branch.phone && (
-                        <FiCheck className="text-green-500 text-sm shrink-0" />
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <FiClock className="text-accent text-xl shrink-0" />
-                    <p className="text-gray-600">{branch.hours}</p>
-                  </div>
-                </>
-              )}
-
-              {branch.status === "coming_soon" && (
-                <p className="text-gray-500 italic">{t("branches.stayTuned")}</p>
+                <button className="mt-6 w-full bg-primary hover:bg-accent text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105">
+                  {t("branches.getDirections")}
+                </button>
               )}
             </div>
-
-            {branch.status === "open" && (
-              <button className="mt-6 w-full bg-primary hover:bg-accent text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-105">
-                {t("branches.getDirections")}
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* View All Button */}
       <div className="mt-12 text-center">
@@ -141,6 +188,21 @@ export default function Branches() {
           <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>
+    </>
+  );
+}
+
+export default function Branches() {
+  const { t } = useLanguage();
+  return (
+    <SectionWrapper
+      id="branches"
+      className="bg-light z-10 pt-8! md:pt-16!"
+      aria-label={t("branches.title")}
+    >
+      <Suspense fallback={<div>Loading...</div>}>
+        <BranchesContent />
+      </Suspense>
     </SectionWrapper>
   );
 }

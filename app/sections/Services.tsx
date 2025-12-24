@@ -191,43 +191,51 @@ export default function Services() {
 
             return (
               <div key={service.id} className="service-card-wrapper">
-                <SpotlightCard className="h-full group flex flex-col">
-                  <div className="p-5 md:p-8 flex flex-col h-full">
+                <div onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.set("service", service.id);
+                  window.history.pushState({}, "", url.toString());
 
-                    {/* Top Row: Icon and Status */}
-                    <div className="flex justify-between items-start mb-4 md:mb-8">
-                      <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-primary md:group-hover:bg-accent md:group-hover:text-white md:group-hover:scale-110 transition-all duration-500 ease-out shadow-sm md:group-hover:shadow-accent/30">
-                        <Icon className="text-lg md:text-2xl transition-transform duration-500 md:group-hover:rotate-[-5deg]" />
+                  document.getElementById("branches")?.scrollIntoView({ behavior: "smooth" });
+                }}>
+                  <SpotlightCard className="h-full group flex flex-col cursor-pointer">
+                    <div className="p-5 md:p-8 flex flex-col h-full">
+
+                      {/* Top Row: Icon and Status */}
+                      <div className="flex justify-between items-start mb-4 md:mb-8">
+                        <div className="w-10 h-10 md:w-14 md:h-14 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center text-primary md:group-hover:bg-accent md:group-hover:text-white md:group-hover:scale-110 transition-all duration-500 ease-out shadow-sm md:group-hover:shadow-accent/30">
+                          <Icon className="text-lg md:text-2xl transition-transform duration-500 md:group-hover:rotate-[-5deg]" />
+                        </div>
+
+                        <div className={`flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-[11px] font-bold tracking-wide uppercase ${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} border`}>
+                          <StatusIcon className="w-3 h-3" />
+                          <span>{statusInfo.label}</span>
+                        </div>
                       </div>
 
-                      <div className={`flex items-center gap-1.5 px-2.5 py-0.5 md:px-3 md:py-1 rounded-full text-[10px] md:text-[11px] font-bold tracking-wide uppercase ${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} border`}>
-                        <StatusIcon className="w-3 h-3" />
-                        <span>{statusInfo.label}</span>
+                      {/* Content */}
+                      <div className="flex-1">
+                        <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 md:group-hover:text-accent transition-colors duration-300">
+                          {service.title}
+                        </h3>
+
+                        <p className="text-slate-500 text-sm leading-relaxed mb-4 md:mb-6 line-clamp-3 md:line-clamp-none">
+                          {status === "coming_soon"
+                            ? "We are working hard to bring this service to you soon."
+                            : status === "limited"
+                              ? `Currently available at select locations: ${service.description.replace("Only in ", "").replace("Yes ", "")}`
+                              : "Experience our premium quality and dedicated service at all our branches."}
+                        </p>
+                      </div>
+
+                      {/* Bottom Action */}
+                      <div className="mt-auto pt-4 md:pt-6 border-t border-slate-50 flex items-center text-sm font-semibold text-slate-400 md:group-hover:text-primary transition-colors duration-300 cursor-pointer">
+                        <span className="mr-2">Explore Service</span>
+                        <FiArrowRight className="w-4 h-4 transform md:group-hover:translate-x-1 transition-transform duration-300 text-accent" />
                       </div>
                     </div>
-
-                    {/* Content */}
-                    <div className="flex-1">
-                      <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 md:group-hover:text-accent transition-colors duration-300">
-                        {service.title}
-                      </h3>
-
-                      <p className="text-slate-500 text-sm leading-relaxed mb-4 md:mb-6 line-clamp-3 md:line-clamp-none">
-                        {status === "coming_soon"
-                          ? "We are working hard to bring this service to you soon."
-                          : status === "limited"
-                            ? `Currently available at select locations: ${service.description.replace("Only in ", "").replace("Yes ", "")}`
-                            : "Experience our premium quality and dedicated service at all our branches."}
-                      </p>
-                    </div>
-
-                    {/* Bottom Action */}
-                    <div className="mt-auto pt-4 md:pt-6 border-t border-slate-50 flex items-center text-sm font-semibold text-slate-400 md:group-hover:text-primary transition-colors duration-300 cursor-pointer">
-                      <span className="mr-2">Explore Service</span>
-                      <FiArrowRight className="w-4 h-4 transform md:group-hover:translate-x-1 transition-transform duration-300 text-accent" />
-                    </div>
-                  </div>
-                </SpotlightCard>
+                  </SpotlightCard>
+                </div>
               </div>
             );
           })}
