@@ -25,6 +25,22 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/",
   },
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+    other: [
+      {
+        rel: "apple-touch-icon-precomposed",
+        url: "/apple-icon.png",
+      },
+    ],
+  },
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -80,6 +96,8 @@ export default async function RootLayout({
   return (
     <html lang={lang} dir={dir} suppressHydrationWarning>
       <head>
+        {/* Web App Manifest for PWA support */}
+        <link rel="manifest" href="/manifest.json" />
         {/* Preload critical hero image for faster LCP */}
         <link
           rel="preload"
