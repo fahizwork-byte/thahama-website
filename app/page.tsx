@@ -58,24 +58,24 @@ export default function Home() {
     <>
       {/* Smooth scroll wrapper - must be client component for Lenis */}
       <SmoothScroll />
-      
+
       {/* Navbar - client component for scroll behavior and mobile menu */}
       <Navbar />
-      
+
       <main className="overflow-x-hidden relative">
         {/* Hero Section - Full viewport height with animations */}
         <Suspense fallback={<SkeletonLoader variant="hero" className="bg-primary" />}>
           <Hero />
         </Suspense>
-        
+
         {/* Spacer to push content below fixed hero section - reduced height to show next section peak */}
-        <div className="h-[80vh] relative z-10" />
-        
+        <div className="h-[100vh] relative z-10" />
+
         {/* Services Section - Service cards with animations */}
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-white" />}>
           <Services />
         </Suspense>
-        
+
         {/* Branches Section - Branch locations from JSON */}
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-light" />}>
           <Branches />
@@ -90,7 +90,7 @@ export default function Home() {
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-light" />}>
           <About />
         </Suspense>
-        
+
         {/* Gallery Section - Image gallery with lightbox */}
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-dark" />}>
           <Gallery />
@@ -100,13 +100,13 @@ export default function Home() {
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-white" />}>
           <FAQ />
         </Suspense>
-        
+
         {/* Contact Section - Contact info and map */}
         <Suspense fallback={<SkeletonLoader variant="section" className="bg-light" />}>
           <Contact />
         </Suspense>
       </main>
-      
+
       {/* Footer - Server component (static content) */}
       <Footer />
     </>
