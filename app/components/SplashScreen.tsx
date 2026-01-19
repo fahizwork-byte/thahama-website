@@ -9,15 +9,24 @@ export default function SplashScreen() {
     const { isLoading } = useLoading();
     const [show, setShow] = useState(true);
 
+    const [minTimePassed, setMinTimePassed] = useState(false);
+
     useEffect(() => {
-        if (!isLoading) {
+        const timer = setTimeout(() => {
+            setMinTimePassed(true);
+        }, 2000);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading && minTimePassed) {
             // Add a small delay before hiding to ensure smooth transition
             const timer = setTimeout(() => {
                 setShow(false);
             }, 500);
             return () => clearTimeout(timer);
         }
-    }, [isLoading]);
+    }, [isLoading, minTimePassed]);
 
     return (
         <AnimatePresence>
@@ -101,7 +110,7 @@ export default function SplashScreen() {
                                     duration: 1.5,
                                     ease: "easeInOut",
                                     repeat: Infinity,
-                                    repeatType: "reverse"
+                                    repeatType: "loop"
                                 }}
                             />
                             {/* Moving light on bar */}
